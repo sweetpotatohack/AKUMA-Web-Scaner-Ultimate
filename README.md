@@ -213,3 +213,74 @@ AKUMA Web Scanner предназначен только для законног�
 <div align="center">
   <b>Made with ❤️ for cybersecurity community</b>
 </div>
+
+## 🚀 Quick Start Options
+
+### Option 1: One-Command Launch (Fastest)
+```bash
+# Clone and start in one go
+git clone https://github.com/your-username/AKUMA_Web_Scanner.git
+cd AKUMA_Web_Scanner
+chmod +x quickstart.sh
+./quickstart.sh
+```
+
+### Option 2: Manual Setup
+```bash
+# Traditional Docker Compose
+docker-compose up --build -d
+
+# Check status
+docker-compose ps
+
+# View logs
+docker-compose logs -f
+```
+
+### Option 3: Automated Installation
+```bash
+# Use installation script
+chmod +x scripts/install.sh
+./scripts/install.sh
+```
+
+## 📁 Project Structure Update
+
+```
+AKUMA_Web_Scanner/
+├── 🔧 scripts/
+│   ├── install.sh          # Automated installation
+│   ├── backup.sh           # Backup system
+│   ├── update.sh           # Update deployment
+│   └── setup.sh            # Advanced setup
+├── 📚 docs/
+│   ├── INSTALLATION_GUIDE.md  # Detailed install guide
+│   ├── DEPLOYMENT_GUIDE.md    # Production deployment
+│   ├── API_DOCUMENTATION.md   # API reference
+│   └── SCANNING_MODULES.md    # Scanner details
+├── quickstart.sh           # One-command launcher
+├── CHANGELOG.md           # Version history
+└── [previous files...]
+```
+
+## 🛠️ Maintenance Commands
+
+```bash
+# Create backup
+./scripts/backup.sh
+
+# Update deployment
+./scripts/update.sh
+
+# Quick restart
+./quickstart.sh
+
+# Clean restart
+docker-compose down
+docker system prune -f
+./quickstart.sh
+```
+
+---
+
+*🔥 AKUMA Web Scanner v1.0 - The Professional Web Security Scanner*
