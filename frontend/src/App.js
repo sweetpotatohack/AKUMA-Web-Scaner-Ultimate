@@ -1,63 +1,188 @@
 import React, { useState, useEffect } from 'react';
-import Layout from './components/Layout';
-import Dashboard from './pages/Dashboard';
-import Scans from './pages/Scans';
-import CreateScan from './pages/CreateScan';
-import Settings from './pages/Settings';
-import { api } from './services/api';
+import './styles/App.css';
 
-const App = () => {
+// Components
+import Dashboard from './components/Dashboard';
+import NewScan from './components/NewScan';
+import ScanDetails from './components/ScanDetails';
+import Vulnerabilities from './components/Vulnerabilities';
+import Reports from './components/Reports';
+import Settings from './components/Settings';
+
+function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [isBackendConnected, setIsBackendConnected] = useState(false);
+  const [stats, setStats] = useState({
+    totalScans: 0,
+    activeScans: 0,
+    vulnerabilities: 0,
+    criticalIssues: 0
+  });
+  const [scans, setScans] = useState([]);
+  const [selectedScan, setSelectedScan] = useState(null);
 
+  // Fetch stats and scans on component mount
   useEffect(() => {
-    // Check backend connection
-    const checkConnection = async () => {
-      try {
-        await api.health();
-        setIsBackendConnected(true);
-      } catch (error) {
-        setIsBackendConnected(false);
-        console.error('Backend connection failed:', error);
-      }
-    };
-
-    checkConnection();
-    const interval = setInterval(checkConnection, 30000); // Check every 30 seconds
+    fetchStats();
+    fetchScans();
+    
+    // Set up periodic updates
+    const interval = setInterval(() => {
+      fetchStats();
+      fetchScans();
+    }, 5000);
 
     return () => clearInterval(interval);
   }, []);
 
-  const renderContent = () => {
-    if (!isBackendConnected) {
-      return (
-        <div className="card">
-          <h2 style={{ color: '#ff6600' }}>⚠️ Backend Connection Lost</h2>
-          <p>Unable to connect to the backend server. Please ensure the backend is running on port 8000.</p>
-          <p>Status: <span style={{ color: '#ff0000' }}>Disconnected</span></p>
-        </div>
-      );
+  const fetchStats = async () => {
+    try {
+      const response = await fetch('http://localhost:8000/api/stats');
+      if (response.ok) {
+        const data = await response.json();
+        setStats(data);
+      }
+    } catch (error) {
+      console.error('Error fetching stats:', error);
     }
+  };
 
+  const fetchScans = async () => {
+    try {
+      const response = await fetch('http://localhost:8000/api/scans');
+      if (response.ok) {
+        const data = await response.json();
+        setScans(data);
+      }
+    } catch (error) {
+      console.error('Error fetching scans:', error);
+    }
+  };
+
+  const handleScanCreated = (newScan) => {
+    setScans(prev => [newScan, ...prev]);
+    setActiveTab('dashboard');
+  };
+
+  const handleScanSelect = (scan) => {
+    setSelectedScan(scan);
+    setActiveTab('scan-details');
+  };
+
+  const handleScanDelete = async (scanId) => {
+    try {
+      const response = await fetch(`http://localhost:8000/api/scans/${scanId}`, {
+        method: 'DELETE'
+      });
+      if (response.ok) {
+        setScans(prev => prev.filter(scan => scan.id !== scanId));
+        if (selectedScan && selectedScan.id === scanId) {
+          setSelectedScan(null);
+          setActiveTab('dashboard');
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting scan:', error);
+    }
+  };
+
+  const tabs = [
+    { id: 'dashboard', label: '📊 Dashboard', icon: '📊' },
+    { id: 'new-scan', label: '🎯 New Scan', icon: '🎯' },
+    { id: 'vulnerabilities', label: '🛡️ Vulnerabilities', icon: '🛡️' },
+    { id: 'reports', label: '📋 Reports', icon: '📋' },
+    { id: 'settings', label: '⚙️ Settings', icon: '⚙️' }
+  ];
+
+  if (activeTab === 'scan-details' && selectedScan) {
+    tabs.push({ 
+      id: 'scan-details', 
+      label: `🔍 ${selectedScan.target}`, 
+      icon: '🔍' 
+    });
+  }
+
+  const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard />;
-      case 'scans':
-        return <Scans />;
-      case 'create':
-        return <CreateScan />;
+        return (
+          <Dashboard 
+            stats={stats} 
+            scans={scans} 
+            onScanSelect={handleScanSelect}
+            onScanDelete={handleScanDelete}
+          />
+        );
+      case 'new-scan':
+        return <NewScan onScanCreated={handleScanCreated} />;
+      case 'scan-details':
+        return (
+          <ScanDetails 
+            scan={selectedScan} 
+            onBack={() => setActiveTab('dashboard')}
+          />
+        );
+      case 'vulnerabilities':
+        return <Vulnerabilities />;
+      case 'reports':
+        return <Reports scans={scans} />;
       case 'settings':
         return <Settings />;
       default:
-        return <Dashboard />;
+        return <Dashboard stats={stats} scans={scans} onScanSelect={handleScanSelect} />;
     }
   };
 
   return (
-    <Layout activeTab={activeTab} onTabChange={setActiveTab}>
-      {renderContent()}
-    </Layout>
+    <div className="App">
+      {/* Header */}
+      <header className="app-header">
+        <div className="header-content">
+          <div className="logo">
+            <div className="logo-icon">🔥</div>
+            <h1>AKUMA Scanner</h1>
+          </div>
+          
+          <div className="header-stats">
+            <div className="stat-item">
+              <div className="stat-value">{stats.totalScans}</div>
+              <div className="stat-label">Total Scans</div>
+            </div>
+            <div className="stat-item">
+              <div className="stat-value">{stats.activeScans}</div>
+              <div className="stat-label">Active</div>
+            </div>
+            <div className="stat-item">
+              <div className="stat-value">{stats.vulnerabilities}</div>
+              <div className="stat-label">Vulnerabilities</div>
+            </div>
+            <div className="stat-item">
+              <div className="stat-value">{stats.criticalIssues}</div>
+              <div className="stat-label">Critical</div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Navigation */}
+      <nav className="nav-tabs">
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            className={`nav-tab ${activeTab === tab.id ? 'active' : ''}`}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            <span className="nav-tab-icon">{tab.icon}</span>
+            {tab.label}
+          </button>
+        ))}
+      </nav>
+
+      {/* Main Content */}
+      <main className="main-content fade-in">
+        {renderContent()}
+      </main>
+    </div>
   );
-};
+}
 
 export default App;
