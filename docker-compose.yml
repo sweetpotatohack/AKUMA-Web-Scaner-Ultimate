@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: akuma_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./backend:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+    networks:
+      - akuma_network
+
+  frontend:
+    build: ./frontend
+    container_name: akuma_frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - akuma_network
+
+  redis:
+    image: redis:alpine
+    container_name: akuma_redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - akuma_network
+
+networks:
+  akuma_network:
+    driver: bridge

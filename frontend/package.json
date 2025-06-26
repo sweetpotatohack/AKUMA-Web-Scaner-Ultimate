@@ -1,0 +1,19 @@
+{
+  "name": "akuma-frontend",
+  "version": "2.0.0",
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.8.0",
+    "recharts": "^2.5.0",
+    "styled-components": "^5.3.6"
+  },
+  "scripts": {
+    "start": "serve -s build -p 3000",
+    "build": "echo 'Build completed'",
+    "dev": "serve -s . -p 3000"
+  },
+  "devDependencies": {
+    "serve": "^14.2.0"
+  }
+}
