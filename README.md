@@ -1,4 +1,4 @@
-# 🔥 AKUMA Web Scanner 
+# 🔥 AKUMA Web Scanner
 
 <div align="center">
   <img src="https://img.shields.io/badge/Python-3.8+-blue.svg" alt="Python">
@@ -6,281 +6,350 @@
   <img src="https://img.shields.io/badge/FastAPI-0.68+-009688.svg" alt="FastAPI">
   <img src="https://img.shields.io/badge/Docker-Compose-2496ED.svg" alt="Docker">
   <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License">
+  <img src="https://img.shields.io/badge/Security-Scanner-red.svg" alt="Security">
 </div>
 
-**AKUMA Web Scanner** - это продвинутый веб-сканер безопасности с современным киберпанк интерфейсом, созданный для комплексного анализа веб-приложений и поиска уязвимостей.
-
-## ✨ Возможности
-
-### 🎯 Основной функционал
-- **Multi-target сканирование** - одновременное сканирование множественных целей
-- **Прогрессивное сканирование** - пошаговая эмуляция профессиональных сканеров (Acunetix/OpenVAS)
-- **Реальное время** - мониторинг прогресса сканирования в live режиме
-- **Детальная отчетность** - экспорт результатов в HTML формате
-- **Гибкие настройки** - конфигурация глубины сканирования, потоков и таймаутов
-
-### 🛡️ Типы обнаруживаемых уязвимостей
-- SQL Injection
-- Cross-Site Scripting (XSS)
-- Cross-Site Request Forgery (CSRF)
-- Directory Traversal
-- Server-Side Request Forgery (SSRF)
-- Weak Authentication
-- Information Disclosure
-- Insecure Direct Object References
-- Security Misconfiguration
-
-### 🚀 Этапы сканирования
-1. **Discovery** - обнаружение сервисов и технологий
-2. **Port Scanning** - сканирование портов (nmap эмуляция)
-3. **Web Probing** - HTTP/HTTPS проверка (httpx эмуляция)
-4. **Technology Detection** - определение технологий (whatweb эмуляция)
-5. **Vulnerability Assessment** - поиск уязвимостей (nuclei эмуляция)
-6. **Deep Analysis** - углубленный анализ найденных проблем
-
-### 🎨 Интерфейс
-- **Киберпанк дизайн** - темная тема с неоновыми акцентами
-- **Адаптивность** - полная поддержка мобильных устройств
-- **Интуитивность** - простая навигация по вкладкам
-- **Анимации** - плавные переходы и эффекты
-
-## 🏗️ Архитектура
-
-```
-AKUMA Web Scanner/
-├── backend/           # FastAPI серверная часть
-│   ├── main.py       # Основное API приложение
-│   ├── models.py     # Модели данных
-│   ├── scanner.py    # Логика сканирования
-│   └── requirements.txt
-├── frontend/         # React клиентская часть
-│   ├── src/
-│   │   ├── components/  # React компоненты
-│   │   ├── services/    # API сервисы
-│   │   └── styles/      # CSS стили
-│   ├── package.json
-│   └── Dockerfile
-├── scanner_modules/  # Модули сканирования
-├── reports/         # Генерируемые отчеты
-├── notifications/   # Модуль уведомлений
-└── docker-compose.yml
-```
-
-## 🚀 Быстрый старт
-
-### Предварительные требования
-- Docker и Docker Compose
-- Git
-
-### Установка
-
-1. **Клонируйте репозиторий:**
-```bash
-git clone https://github.com/ваш-username/AKUMA_Web_Scanner.git
-cd AKUMA_Web_Scanner
-```
-
-2. **Запустите контейнеры:**
-```bash
-docker-compose up -d --build
-```
-
-3. **Откройте веб-интерфейс:**
-```
-http://localhost:3001
-```
-
-Backend API будет доступен по адресу: `http://localhost:8001`
-
-## 📋 Использование
-
-### Создание нового сканирования
-
-1. Перейдите на вкладку **"Create Scan"**
-2. Укажите цель(и) для сканирования:
-   - Введите URL вручную
-   - Загрузите файл со списком целей
-3. Настройте параметры сканирования:
-   - **Глубина сканирования** (1-5)
-   - **Количество потоков** (1-10)
-   - **Таймаут запросов** (5-60 сек)
-   - **Включить поддомены** (да/нет)
-4. Нажмите **"Start Scan"**
-
-### Мониторинг сканирования
-
-- Переходите на вкладку **"Scans"** для просмотра всех сканирований
-- Кликните на сканирование для просмотра детальной информации
-- Наблюдайте прогресс в реальном времени
-- Скачивайте отчеты после завершения сканирования
-
-### Настройки уведомлений
-
-На вкладке **"Settings"** можно настроить:
-- Email уведомления
-- Telegram уведомления
-- Частоту отправки уведомлений
-
-## 🔧 API Endpoints
-
-### Сканирование
-- `POST /api/scans/` - Создать новое сканирование
-- `GET /api/scans/` - Получить список всех сканирований
-- `GET /api/scans/{scan_id}` - Получить детали сканирования
-- `DELETE /api/scans/{scan_id}` - Удалить сканирование
-
-### Отчеты
-- `GET /api/scans/{scan_id}/report` - Скачать HTML отчет
-- `GET /api/scans/{scan_id}/vulnerabilities` - Получить список уязвимостей
-
-### Утилиты
-- `POST /api/upload-targets` - Загрузить файл с целями
-- `GET /api/scan-progress/{scan_id}` - Получить прогресс сканирования
-
-## 🛠️ Разработка
-
-### Структура backend
-
-```python
-# Основные компоненты
-- FastAPI приложение с REST API
-- Асинхронное сканирование с websocket обновлениями
-- SQLite база данных для хранения результатов
-- Модульная система для различных типов сканирования
-```
-
-### Структура frontend
-
-```javascript
-// React компоненты
-- Dashboard - главная панель с статистикой
-- Scans - список и детали сканирований
-- CreateScan - форма создания нового сканирования
-- Settings - настройки уведомлений и системы
-```
-
-### Запуск в режиме разработки
-
-**Backend:**
-```bash
-cd backend
-pip install -r requirements.txt
-uvicorn main:app --reload --host 0.0.0.0 --port 8001
-```
-
-**Frontend:**
-```bash
-cd frontend
-npm install
-npm start
-```
-
-## 🎯 Эмулируемые инструменты
-
-AKUMA Web Scanner эмулирует работу следующих профессиональных инструментов:
-
-- **nmap** - сканирование портов и сервисов
-- **httpx** - HTTP/HTTPS проверка и анализ
-- **whatweb** - определение веб-технологий
-- **nuclei** - поиск уязвимостей по шаблонам
-- **Custom modules** - дополнительные проверки безопасности
-
-## 🤝 Участие в разработке
-
-1. Fork репозитория
-2. Создайте feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit изменения (`git commit -m 'Add amazing feature'`)
-4. Push в branch (`git push origin feature/amazing-feature`)
-5. Откройте Pull Request
-
-## 📄 Лицензия
-
-Этот проект лицензирован под MIT License - смотрите [LICENSE](LICENSE) файл для деталей.
-
-## ⚠️ Дисклеймер
-
-AKUMA Web Scanner предназначен только для законного тестирования безопасности систем, на которые у вас есть явное разрешение. Использование этого инструмента против систем без разрешения владельца может быть незаконным. Авторы не несут ответственности за неправомерное использование этого инструмента.
-
-## 📞 Поддержка
-
-Если у вас есть вопросы или проблемы:
-- Создайте Issue в GitHub
-- Обратитесь к документации API
-- Проверьте логи Docker контейнеров
+<div align="center">
+  <h3>🎯 Professional Web Security Scanner with Cyberpunk UI</h3>
+  <p><strong>AKUMA Web Scanner</strong> - Advanced web vulnerability scanner inspired by Acunetix and OpenVAS</p>
+</div>
 
 ---
 
-<div align="center">
-  <b>Made with ❤️ for cybersecurity community</b>
-</div>
+## 🚀 Quick Start
 
-## 🚀 Quick Start Options
-
-### Option 1: One-Command Launch (Fastest)
 ```bash
-# Clone and start in one go
-git clone https://github.com/your-username/AKUMA_Web_Scanner.git
+# Clone the repository
+git clone https://github.com/yourusername/AKUMA_Web_Scanner.git
+cd AKUMA_Web_Scanner
+
+# One-command deployment
+./quickstart.sh
+
+# Access the application
+# Frontend: http://localhost:3000
+# Backend API: http://localhost:8000
+# API Docs: http://localhost:8000/docs
+```
+
+## ✨ Features
+
+### 🎯 Core Functionality
+- **Multi-target Scanning** - Simultaneous scanning of multiple targets
+- **Progressive Scanning** - Step-by-step emulation of professional scanners (Acunetix/OpenVAS style)
+- **Real-time Monitoring** - Live scan progress tracking via WebSockets
+- **Comprehensive Reporting** - Detailed HTML reports with vulnerability analysis
+- **Flexible Configuration** - Customizable scan depth, threads, and timeouts
+- **File Upload Support** - Bulk target import from text files
+- **Notification System** - Email alerts and webhook notifications
+
+### 🛡️ Vulnerability Detection
+- **SQL Injection** - Database query manipulation attacks
+- **Cross-Site Scripting (XSS)** - Reflected and stored XSS vulnerabilities
+- **Cross-Site Request Forgery (CSRF)** - CSRF token validation bypass
+- **Directory Traversal** - Path traversal and file inclusion attacks
+- **Server-Side Request Forgery (SSRF)** - Internal service enumeration
+- **Authentication Bypass** - Weak authentication mechanisms
+- **Information Disclosure** - Sensitive data exposure
+- **Security Misconfiguration** - Server and application misconfigurations
+- **Insecure Direct Object References** - Authorization bypass vulnerabilities
+
+### 🔍 Scanning Phases
+1. **🔍 Discovery** - Service and technology discovery
+2. **🔎 Port Scanning** - Network port enumeration (nmap-style)
+3. **🌐 Web Probing** - HTTP/HTTPS service detection (httpx-style)
+4. **🔧 Technology Detection** - Web technology fingerprinting (whatweb-style)
+5. **⚡ Vulnerability Assessment** - Security flaw detection (nuclei-style)
+6. **🕵️ Deep Analysis** - In-depth vulnerability analysis and exploitation
+
+### 🎨 Modern UI/UX
+- **🌃 Cyberpunk Theme** - Dark interface with neon accents
+- **📱 Responsive Design** - Full mobile device support
+- **⚡ Real-time Updates** - Live progress indicators and notifications
+- **📊 Interactive Dashboard** - Comprehensive scan overview
+- **🎭 Smooth Animations** - Fluid transitions and effects
+- **🖱️ Intuitive Navigation** - Easy-to-use tabbed interface
+
+## 🏗️ Architecture
+
+```
+AKUMA_Web_Scanner/
+├── 🖥️ backend/                    # FastAPI Backend
+│   ├── app/
+│   │   ├── main.py                # Application entry point
+│   │   ├── models/                # Data models
+│   │   ├── routers/               # API endpoints
+│   │   ├── services/              # Business logic
+│   │   └── scanner/               # Scanning modules
+│   ├── requirements.txt
+│   └── Dockerfile
+├── 🎨 frontend/                   # React Frontend
+│   ├── src/
+│   │   ├── components/            # UI components
+│   │   ├── pages/                 # Application pages
+│   │   ├── styles/                # CSS styles
+│   │   └── utils/                 # Utility functions
+│   ├── package.json
+│   └── Dockerfile
+├── 📚 docs/                       # Documentation
+│   ├── INSTALLATION_GUIDE.md
+│   ├── DEPLOYMENT_GUIDE.md
+│   └── API_DOCUMENTATION.md
+├── 🔧 scripts/                    # Automation scripts
+│   ├── install.sh                 # Installation script
+│   ├── backup.sh                  # Backup script
+│   └── update.sh                  # Update script
+├── 🚀 quickstart.sh               # One-command deployment
+├── 🐳 docker-compose.yml          # Docker orchestration
+└── 📋 README.md                   # This file
+```
+
+## 🛠️ Technology Stack
+
+### Backend
+- **⚡ FastAPI** - Modern Python web framework
+- **🔄 Asyncio** - Asynchronous programming support
+- **🗄️ Redis** - Caching and session management
+- **📡 WebSockets** - Real-time communication
+- **🐍 Python 3.8+** - Core programming language
+
+### Frontend
+- **⚛️ React 18** - Modern UI library
+- **🎨 CSS3** - Advanced styling with animations
+- **📡 WebSocket** - Real-time updates
+- **📱 Responsive Design** - Mobile-first approach
+
+### DevOps
+- **🐳 Docker** - Containerization
+- **🔗 Docker Compose** - Multi-container orchestration
+- **🗄️ Redis** - In-memory data structure store
+- **🔄 CI/CD Ready** - Automated deployment support
+
+## 📦 Installation Methods
+
+### 🚀 Quick Installation (Recommended)
+```bash
+git clone https://github.com/yourusername/AKUMA_Web_Scanner.git
 cd AKUMA_Web_Scanner
 chmod +x quickstart.sh
 ./quickstart.sh
 ```
 
-### Option 2: Manual Setup
+### 🐳 Docker Installation
 ```bash
-# Traditional Docker Compose
-docker-compose up --build -d
+# Clone repository
+git clone https://github.com/yourusername/AKUMA_Web_Scanner.git
+cd AKUMA_Web_Scanner
+
+# Build and start services
+docker-compose up -d --build
 
 # Check status
 docker-compose ps
-
-# View logs
-docker-compose logs -f
 ```
 
-### Option 3: Automated Installation
+### 🔧 Manual Installation
 ```bash
-# Use installation script
-chmod +x scripts/install.sh
+# Install dependencies
 ./scripts/install.sh
+
+# Start backend
+cd backend
+pip install -r requirements.txt
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+# Start frontend (new terminal)
+cd frontend
+npm install
+npm start
 ```
 
-## 📁 Project Structure Update
+## 🎮 Usage Guide
 
-```
-AKUMA_Web_Scanner/
-├── 🔧 scripts/
-│   ├── install.sh          # Automated installation
-│   ├── backup.sh           # Backup system
-│   ├── update.sh           # Update deployment
-│   └── setup.sh            # Advanced setup
-├── 📚 docs/
-│   ├── INSTALLATION_GUIDE.md  # Detailed install guide
-│   ├── DEPLOYMENT_GUIDE.md    # Production deployment
-│   ├── API_DOCUMENTATION.md   # API reference
-│   └── SCANNING_MODULES.md    # Scanner details
-├── quickstart.sh           # One-command launcher
-├── CHANGELOG.md           # Version history
-└── [previous files...]
-```
+### 1. 🌟 Access the Application
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8000
+- **API Documentation**: http://localhost:8000/docs
+- **API Alternative Docs**: http://localhost:8000/redoc
 
-## 🛠️ Maintenance Commands
+### 2. 🎯 Create a New Scan
+1. Navigate to the **"New Scan"** tab
+2. Choose input method:
+   - **Manual Entry**: Enter targets separated by commas
+   - **File Upload**: Upload a text file with targets (one per line)
+3. Configure scan settings:
+   - **Scan Depth**: Surface/Deep/Comprehensive
+   - **Threads**: Number of concurrent workers
+   - **Timeout**: Request timeout in seconds
+4. Click **"Start Scan"** to begin
 
+### 3. 📊 Monitor Progress
+- View real-time progress in the **Dashboard**
+- Watch detailed logs in the **Scan Details** section
+- Get notified when scan phases complete
+
+### 4. 📈 Analyze Results
+- Review vulnerabilities in the **Vulnerabilities** tab
+- Generate detailed reports in the **Reports** section
+- Export findings in HTML format
+
+### 5. ⚙️ Configure Settings
+- Set up email notifications in **Settings**
+- Configure webhook endpoints for integrations
+- Adjust scanning parameters and thresholds
+
+## 🔧 Configuration
+
+### Environment Variables
 ```bash
-# Create backup
-./scripts/backup.sh
+# Backend Configuration
+REDIS_URL=redis://localhost:6379
+DATABASE_URL=sqlite:///./scanner.db
+SECRET_KEY=your-secret-key-here
 
-# Update deployment
-./scripts/update.sh
+# Notification Settings
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=your-email@gmail.com
+SMTP_PASSWORD=your-app-password
 
-# Quick restart
-./quickstart.sh
-
-# Clean restart
-docker-compose down
-docker system prune -f
-./quickstart.sh
+# Security Settings
+ALLOWED_HOSTS=localhost,127.0.0.1
+CORS_ORIGINS=http://localhost:3000
 ```
+
+### Docker Environment
+Copy and modify the example environment file:
+```bash
+cp .env.example .env
+# Edit .env with your configuration
+```
+
+## 📊 API Documentation
+
+### 🔗 Core Endpoints
+- **POST /api/scans** - Create new scan
+- **GET /api/scans** - List all scans
+- **GET /api/scans/{scan_id}** - Get scan details
+- **DELETE /api/scans/{scan_id}** - Delete scan
+- **GET /api/vulnerabilities** - List vulnerabilities
+- **POST /api/reports/generate** - Generate report
+- **WebSocket /ws/scan/{scan_id}** - Real-time updates
+
+### 📚 Interactive Documentation
+Visit http://localhost:8000/docs for complete API documentation with interactive testing interface.
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**🚫 Port Already in Use**
+```bash
+# Check what's using the port
+sudo lsof -i :3000
+sudo lsof -i :8000
+
+# Kill the process or change ports in docker-compose.yml
+```
+
+**🐳 Docker Issues**
+```bash
+# Reset Docker environment
+docker-compose down
+docker system prune -a
+docker-compose up -d --build
+```
+
+**📡 Connection Issues**
+```bash
+# Check service status
+docker-compose ps
+docker-compose logs backend
+docker-compose logs frontend
+```
+
+### 🔍 Debug Mode
+Enable detailed logging:
+```bash
+# Backend debug mode
+export DEBUG=True
+export LOG_LEVEL=DEBUG
+
+# Frontend debug mode
+export REACT_APP_DEBUG=true
+```
+
+## 🤝 Contributing
+
+We welcome contributions! Here's how to get started:
+
+### 🔄 Development Setup
+```bash
+# Fork the repository
+git clone https://github.com/yourusername/AKUMA_Web_Scanner.git
+cd AKUMA_Web_Scanner
+
+# Create development branch
+git checkout -b feature/your-feature-name
+
+# Set up development environment
+./scripts/install.sh
+
+# Make your changes and test
+./quickstart.sh
+
+# Submit pull request
+```
+
+### 📋 Contribution Guidelines
+1. **🧪 Testing**: Ensure all tests pass
+2. **📝 Documentation**: Update relevant documentation
+3. **🎨 Code Style**: Follow existing code patterns
+4. **🔒 Security**: Test security implications
+5. **📱 Responsive**: Ensure mobile compatibility
+
+## 🔒 Security Considerations
+
+### ⚠️ Important Warnings
+- **Educational Purpose**: This tool is for educational and authorized testing only
+- **Legal Compliance**: Ensure you have permission before scanning any targets
+- **Network Security**: Run in isolated environments when possible
+- **Data Protection**: Scan results may contain sensitive information
+
+### 🛡️ Best Practices
+- Use strong authentication in production
+- Implement rate limiting for API endpoints
+- Regular security updates for dependencies
+- Monitor scan activities and access logs
+- Encrypt sensitive configuration data
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🏆 Acknowledgments
+
+- **🎯 Inspiration**: Acunetix, OpenVAS, and Nuclei scanners
+- **🎨 Design**: Cyberpunk 2077 visual aesthetics
+- **🛠️ Tools**: Nmap, Httpx, Whatweb methodologies
+- **🌟 Community**: Open source security tools community
+
+## 📞 Support
+
+### 🆘 Getting Help
+- **📚 Documentation**: Check the `docs/` directory
+- **🐛 Issues**: Create an issue on GitHub
+- **💬 Discussions**: Join our community discussions
+- **📧 Contact**: Reach out for enterprise support
+
+### 🔄 Updates
+- **⭐ Star** this repository to stay updated
+- **👀 Watch** for new releases and features
+- **🍴 Fork** to contribute your improvements
 
 ---
 
-*🔥 AKUMA Web Scanner v1.0 - The Professional Web Security Scanner*
+<div align="center">
+  <p><strong>🔥 AKUMA Web Scanner - Professional Security Testing Made Simple</strong></p>
+  <p>Built with ❤️ for the cybersecurity community</p>
+</div>
