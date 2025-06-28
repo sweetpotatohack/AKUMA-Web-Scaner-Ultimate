@@ -1,0 +1,186 @@
+/* System Stats Bar */
+.system-stats {
+  background: #1a1a1a;
+  border-bottom: 1px solid #333;
+  padding: 8px 20px;
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  font-family: 'Ubuntu Mono', monospace;
+  font-size: 11px;
+  color: #888;
+  justify-content: space-between;
+}
+
+.stat-group {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.stat-label {
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.stat-value {
+  color: #00ff00;
+  font-weight: bold;
+  padding: 2px 6px;
+  background: rgba(0, 255, 0, 0.1);
+  border-radius: 2px;
+}
+
+.stat-value.active {
+  color: #ffaa00;
+  background: rgba(255, 170, 0, 0.1);
+  animation: pulse-orange 2s infinite;
+}
+
+.stat-value.vulns {
+  color: #ff6666;
+  background: rgba(255, 102, 102, 0.1);
+}
+
+.stat-value.critical {
+  color: #ff0000;
+  background: rgba(255, 0, 0, 0.1);
+  animation: critical-blink 1s infinite;
+}
+
+.system-time {
+  color: #00ff00;
+  font-weight: bold;
+  margin-left: auto;
+}
+
+/* Terminal Navigation */
+.terminal-nav {
+  background: #0c0c0c;
+  border-bottom: 1px solid #333;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  font-family: 'Ubuntu Mono', monospace;
+  position: relative;
+}
+
+.nav-prompt {
+  color: #00ff00;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.prompt {
+  font-size: 13px;
+}
+
+.nav-tabs {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex: 1;
+}
+
+.nav-command {
+  color: #888;
+  text-decoration: none;
+  padding: 5px 10px;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+  font-size: 13px;
+  text-transform: lowercase;
+  position: relative;
+}
+
+.nav-command:hover {
+  color: #00ff00;
+  background: rgba(0, 255, 0, 0.1);
+}
+
+.nav-command.active {
+  color: #00ff00;
+  background: rgba(0, 255, 0, 0.15);
+  border: 1px solid rgba(0, 255, 0, 0.3);
+}
+
+.nav-command.active::before {
+  content: './';
+  color: #666;
+}
+
+.nav-cursor {
+  margin-left: auto;
+}
+
+.cursor {
+  color: #00ff00;
+  animation: terminal-blink 1s infinite;
+  font-size: 13px;
+}
+
+@keyframes terminal-blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+@keyframes pulse-orange {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes critical-blink {
+  0%, 50% { color: #ff0000; background: rgba(255, 0, 0, 0.1); }
+  51%, 100% { color: #ff6666; background: rgba(255, 102, 102, 0.1); }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .system-stats {
+    padding: 8px 15px;
+    gap: 15px;
+    flex-wrap: wrap;
+  }
+  
+  .stat-group {
+    min-width: auto;
+  }
+  
+  .system-time {
+    order: -1;
+    margin-left: 0;
+  }
+  
+  .terminal-nav {
+    padding: 10px 15px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .nav-tabs {
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  
+  .nav-cursor {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .system-stats {
+    font-size: 10px;
+    gap: 10px;
+  }
+  
+  .nav-command {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+  
+  .nav-prompt {
+    display: none;
+  }
+}

@@ -7,7 +7,7 @@ import uuid
 from datetime import datetime
 from typing import Dict, List, Any, Optional
 import logging
-#import aiofiles
+import aiofiles
 import requests
 from fastapi import FastAPI, HTTPException, BackgroundTasks, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
@@ -44,7 +44,6 @@ class ScanPhase:
     PORT_SCAN = "Port Scan"
     WEB_PROBE = "Web Probe"
     VULNERABILITY_SCAN = "Vulnerability Scan"
-    FUZZING = "Directory Fuzzing"
     DEEP_ANALYSIS = "Deep Analysis"
 
 async def log_message(scan_id: str, message: str):
@@ -61,8 +60,8 @@ async def log_message(scan_id: str, message: str):
     if log_dir:
         log_file = os.path.join(log_dir, 'scan.log')
         try:
-            with open(log_file, 'a') as f:
-                f.write(log_entry + '\n')
+            async with aiofiles.open(log_file, 'a') as f:
+                await f.write(log_entry + '\n')
         except Exception as e:
             logger.error(f"Failed to write to log file: {e}")
     
@@ -227,7 +226,7 @@ async def phase_web_probe(scan_id: str, target: str):
                     scans[scan_id]['cms_detected'] = 'WordPress'
                     await log_message(scan_id, "🎯 Detected CMS: WordPress")
     
-    scans[scan_id]['progress'] = 50
+    scans[scan_id]['progress'] = 60
     scans[scan_id]['phase'] = ScanPhase.VULNERABILITY_SCAN
     
     await log_message(scan_id, f"✅ {ScanPhase.WEB_PROBE} phase completed")
@@ -264,18 +263,11 @@ async def phase_vulnerability_scan(scan_id: str, target: str):
             "Cloning Bitrix vulnerability scanner"
         )
         
-        # Устанавливаем зависимости для check_bitrix
         if os.path.exists(bitrix_dir):
-            stdout, stderr, code = await run_command(
-                scan_id,
-                f"cd {bitrix_dir} && pip3 install -r requirements.txt",
-                "Installing check_bitrix dependencies"
-            )
-            
             if webhook_url:
-                cmd = f"cd {bitrix_dir} && python3 test_bitrix.py -t https://{target} scan -s {webhook_url} > {log_dir}/bitrix_scan.txt 2>&1"
+                cmd = f"cd {bitrix_dir} && python3 test_bitrix.py -t https://{target} scan -s {webhook_url} > {log_dir}/bitrix_scan.txt"
             else:
-                cmd = f"cd {bitrix_dir} && python3 test_bitrix.py -t https://{target} scan > {log_dir}/bitrix_scan.txt 2>&1"
+                cmd = f"cd {bitrix_dir} && python3 test_bitrix.py -t https://{target} scan > {log_dir}/bitrix_scan.txt"
             
             stdout, stderr, code = await run_command(
                 scan_id,
@@ -296,6 +288,31 @@ async def phase_vulnerability_scan(scan_id: str, target: str):
                 scan_id,
                 f"nuclei -l {log_dir}/httpx_result.txt -t {bitrix_templates_dir} -o {log_dir}/nuclei_bitrix_results.txt -silent",
                 "Running Bitrix-specific nuclei templates"
+            )
+        
+        # Фаззинг директорий с Bitrix словарем
+        stdout, stderr, code = await run_command(
+            scan_id,
+            f"cd {log_dir} && git clone https://github.com/jivoi/pentest",
+            "Cloning pentest wordlists"
+        )
+        
+        pentest_dir = os.path.join(log_dir, 'pentest')
+        wordlist_path = os.path.join(pentest_dir, 'wordlists', 'dicc.txt')
+        
+        if os.path.exists(wordlist_path):
+            stdout, stderr, code = await run_command(
+                scan_id,
+                f"dirsearch -u https://{target} -w {wordlist_path} -o {log_dir}/bitrix_fuzzing.txt --format=simple",
+                "Running Bitrix directory fuzzing"
+            )
+        
+        # Дополнительный фаззинг с ffuf
+        if os.path.exists(wordlist_path):
+            stdout, stderr, code = await run_command(
+                scan_id,
+                f"ffuf -w {wordlist_path} -u https://{target}/FUZZ -o {log_dir}/ffuf_bitrix.json -of json -s",
+                "Running ffuf fuzzing with Bitrix wordlist"
             )
     
     # Специализированные проверки для WordPress
@@ -318,41 +335,10 @@ async def phase_vulnerability_scan(scan_id: str, target: str):
     # Парсинг результатов nuclei
     await parse_nuclei_results(scan_id, log_dir)
     
-    scans[scan_id]['progress'] = 70
-    scans[scan_id]['phase'] = ScanPhase.FUZZING
-    
-    await log_message(scan_id, f"✅ {ScanPhase.VULNERABILITY_SCAN} phase completed")
-
-async def phase_fuzzing(scan_id: str, target: str):
-    """Этап 5: Directory Fuzzing - поиск скрытых директорий"""
-    await log_message(scan_id, f"🔍 Starting {ScanPhase.FUZZING} phase for {target}")
-    
-    log_dir = scans[scan_id]['log_dir']
-    
-    # Читаем веб-сервисы из httpx_result.txt
-    httpx_file = os.path.join(log_dir, 'httpx_result.txt')
-    if os.path.exists(httpx_file):
-        with open(httpx_file, 'r') as f:
-            web_targets = [line.strip() for line in f if line.strip()]
-        
-        await log_message(scan_id, f"📡 Found {len(web_targets)} web services for fuzzing")
-        
-        # Запускаем фазинг для каждого веб-сервиса
-        for i, web_target in enumerate(web_targets):
-            await log_message(scan_id, f"🔍 Fuzzing {web_target} ({i+1}/{len(web_targets)})")
-            
-            # Используем dirsearch со стандартным словарем
-            stdout, stderr, code = await run_command(
-                scan_id,
-                f"dirsearch -u {web_target} -o {log_dir}/dirsearch_{i}.txt --format=simple -q",
-                f"Running directory fuzzing on {web_target}"
-            )
-            
-    
-    scans[scan_id]['progress'] = 85
+    scans[scan_id]['progress'] = 80
     scans[scan_id]['phase'] = ScanPhase.DEEP_ANALYSIS
     
-    await log_message(scan_id, f"✅ {ScanPhase.FUZZING} phase completed")
+    await log_message(scan_id, f"✅ {ScanPhase.VULNERABILITY_SCAN} phase completed")
 
 async def parse_nuclei_results(scan_id: str, log_dir: str):
     """Парсинг результатов nuclei"""
@@ -365,14 +351,15 @@ async def parse_nuclei_results(scan_id: str, log_dir: str):
         file_path = os.path.join(log_dir, nuclei_file)
         if os.path.exists(file_path):
             try:
-                with open(file_path, 'r') as f:
-                    content = f.read()
+                async with aiofiles.open(file_path, 'r') as f:
+                    content = await f.read()
                     
                 lines = content.strip().split('\n')
                 for line in lines:
                     if line.strip() and '[' in line and ']' in line:
                         try:
                             # Парсинг формата: [template-id] [protocol] [severity] URL
+                            # Пример: [tech-detect:nginx] [http] [info] https://example.com
                             parts = []
                             temp_line = line
                             
@@ -421,13 +408,13 @@ async def parse_nuclei_results(scan_id: str, log_dir: str):
                 await log_message(scan_id, f"❌ Error parsing {nuclei_file}: {str(e)}")
 
 async def phase_deep_analysis(scan_id: str, target: str):
-    """Этап 6: Deep Analysis - финальный анализ и отчеты"""
+    """Этап 5: Deep Analysis - финальный анализ и отчеты"""
     await log_message(scan_id, f"🔍 Starting {ScanPhase.DEEP_ANALYSIS} phase for {target}")
     
     log_dir = scans[scan_id]['log_dir']
     
     # Анализ результатов фаззинга
-    fuzzing_files = [f for f in os.listdir(log_dir) if f.startswith('dirsearch_') or f.startswith('removed_ffuf_')]
+    fuzzing_files = ['bitrix_fuzzing.txt', 'ffuf_bitrix.json']
     for fuzzing_file in fuzzing_files:
         file_path = os.path.join(log_dir, fuzzing_file)
         if os.path.exists(file_path):
@@ -516,8 +503,8 @@ async def generate_html_report(scan_id: str, target: str):
     """
     
     try:
-        with open(report_path, 'w') as f:
-            f.write(html_content)
+        async with aiofiles.open(report_path, 'w') as f:
+            await f.write(html_content)
         await log_message(scan_id, f"📄 HTML report generated: {report_path}")
     except Exception as e:
         await log_message(scan_id, f"❌ Failed to generate HTML report: {str(e)}")
@@ -539,10 +526,7 @@ async def perform_scan(scan_id: str, target: str):
         # Этап 4: Vulnerability Scan
         await phase_vulnerability_scan(scan_id, target)
         
-        # Этап 5: Directory Fuzzing
-        await phase_fuzzing(scan_id, target)
-        
-        # Этап 6: Deep Analysis
+        # Этап 5: Deep Analysis
         await phase_deep_analysis(scan_id, target)
         
     except Exception as e:
@@ -590,6 +574,13 @@ async def get_scan(scan_id: str):
         raise HTTPException(status_code=404, detail="Scan not found")
     return scans[scan_id]
 
+@app.get("/api/scans/{scan_id}/logs")
+async def get_scan_logs(scan_id: str):
+    if scan_id not in scan_logs:
+        raise HTTPException(status_code=404, detail="Logs not found")
+    return {"logs": scan_logs[scan_id]}
+
+
 @app.delete("/api/scans/{scan_id}")
 async def delete_scan(scan_id: str):
     if scan_id not in scans:
@@ -609,7 +600,6 @@ async def delete_scan(scan_id: str):
         del running_tasks[scan_id]
     
     return {"message": "Scan deleted successfully"}
-
 @app.post("/api/scans")
 async def create_scan(scan_request: ScanRequest, background_tasks: BackgroundTasks):
     scan_id = str(uuid.uuid4())
@@ -661,317 +651,6 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         websocket_connections.remove(websocket)
 
-@app.get("/api/scans/{scan_id}/ports")
-async def get_scan_ports(scan_id: str):
-    """Get ports for a specific scan"""
-    if scan_id not in scans:
-        raise HTTPException(status_code=404, detail="Scan not found")
-    
-    scan = scans[scan_id]
-    return scan.get('ports', [])
-
-@app.get("/api/scans/{scan_id}/logs")
-async def get_scan_logs(scan_id: str):
-    """Get logs for a specific scan"""
-    if scan_id not in scan_logs:
-        return []
-    
-    return scan_logs[scan_id]
-
-@app.get("/api/scans/{scan_id}/vulnerabilities")
-async def get_scan_vulnerabilities(scan_id: str):
-    """Get vulnerabilities for a specific scan"""
-    if scan_id not in scans:
-        raise HTTPException(status_code=404, detail="Scan not found")
-    
-    scan = scans[scan_id]
-    return scan.get('vulnerabilities', [])
-
-@app.get("/api/scans/{scan_id}/fuzzing")
-async def get_scan_fuzzing(scan_id: str):
-    """Get fuzzing results for a specific scan"""
-    if scan_id not in scans:
-        raise HTTPException(status_code=404, detail="Scan not found")
-    
-    log_dir = scans[scan_id].get('log_dir')
-    if not log_dir:
-        return {"error": "Log directory not found"}
-    
-    fuzzing_results = {}
-    
-    # Читаем результаты dirsearch
-    for file in os.listdir(log_dir):
-        if file.startswith('dirsearch_'):
-            file_path = os.path.join(log_dir, file)
-            try:
-                with open(file_path, 'r') as f:
-                    fuzzing_results[file] = f.read()
-            except Exception as e:
-                fuzzing_results[f'{file}_error'] = str(e)
-    
-    # Читаем результаты ffuf
-    for file in os.listdir(log_dir):
-        if file.startswith('removed_ffuf_'):
-            file_path = os.path.join(log_dir, file)
-            try:
-                with open(file_path, 'r') as f:
-                    ffuf_data = json.load(f)
-                    fuzzing_results[file] = ffuf_data
-            except Exception as e:
-                fuzzing_results[f'{file}_error'] = str(e)
-    
-    # Читаем результаты check_bitrix
-    bitrix_file = os.path.join(log_dir, 'bitrix_scan.txt')
-    if os.path.exists(bitrix_file):
-        try:
-            with open(bitrix_file, 'r') as f:
-                fuzzing_results['bitrix_scan'] = f.read()
-        except Exception as e:
-            fuzzing_results['bitrix_scan_error'] = str(e)
-    
-    return fuzzing_results
-
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
-
-@app.get("/api/scans/{scan_id}/dirsearch")
-async def get_scan_dirsearch(scan_id: str):
-    """Get dirsearch results for a specific scan"""
-    if scan_id not in scans:
-        raise HTTPException(status_code=404, detail="Scan not found")
-    
-    log_dir = scans[scan_id].get('log_dir')
-    if not log_dir:
-        return {"error": "Log directory not found"}
-    
-    dirsearch_results = {}
-    
-    # Читаем результаты dirsearch
-    for file in os.listdir(log_dir):
-        if file.startswith('dirsearch_'):
-            file_path = os.path.join(log_dir, file)
-            try:
-                with open(file_path, 'r') as f:
-                    content = f.read()
-                    dirsearch_results['raw_output'] = content
-                    
-                    # Попытка парсинга результатов
-                    results = []
-                    for line in content.split('\n'):
-                        if ' - ' in line and ('200' in line or '301' in line or '302' in line or '403' in line):
-                            parts = line.split()
-                            if len(parts) >= 3:
-                                try:
-                                    status = int(parts[0])
-                                    size = parts[1] if parts[1].isdigit() else '0'
-                                    url = ' '.join(parts[2:])
-                                    results.append({
-                                        'status': status,
-                                        'size': size,
-                                        'url': url
-                                    })
-                                except:
-                                    continue
-                    
-                    dirsearch_results['results'] = results
-            except Exception as e:
-                dirsearch_results['error'] = str(e)
-    
-    return dirsearch_results
-
-@app.get("/api/scans/{scan_id}/scanner-results")
-async def get_scan_scanner_results(scan_id: str):
-    """Get scanner results (Bitrix, WPScan, etc.) for a specific scan"""
-    if scan_id not in scans:
-        raise HTTPException(status_code=404, detail="Scan not found")
-    
-    log_dir = scans[scan_id].get('log_dir')
-    if not log_dir:
-        return {"error": "Log directory not found"}
-    
-    scanner_results = {}
-    
-    # Читаем результаты Bitrix Scanner
-    bitrix_file = os.path.join(log_dir, 'bitrix_scan.txt')
-    if os.path.exists(bitrix_file):
-        try:
-            with open(bitrix_file, 'r') as f:
-                scanner_results['bitrix_scan'] = f.read()
-        except Exception as e:
-            scanner_results['bitrix_scan_error'] = str(e)
-    
-    # Читаем результаты WPScan
-    wpscan_file = os.path.join(log_dir, 'wpscan.txt')
-    if os.path.exists(wpscan_file):
-        try:
-            with open(wpscan_file, 'r') as f:
-                scanner_results['wpscan'] = f.read()
-        except Exception as e:
-            scanner_results['wpscan_error'] = str(e)
-    
-    return scanner_results
-
-@app.get("/api/vulnerabilities")
-async def get_all_vulnerabilities():
-    """Get all vulnerabilities from all scans"""
-    all_vulnerabilities = []
-    
-    for scan_id, scan in scans.items():
-        vulnerabilities = scan.get('vulnerabilities', [])
-        for vuln in vulnerabilities:
-            vuln_copy = vuln.copy()
-            vuln_copy['scan_id'] = scan_id
-            vuln_copy['target'] = scan.get('target', 'Unknown')
-            all_vulnerabilities.append(vuln_copy)
-    
-    # Сортируем по критичности
-    severity_order = {'critical': 0, 'high': 1, 'medium': 2, 'low': 3, 'info': 4}
-    all_vulnerabilities.sort(key=lambda x: severity_order.get(x.get('severity', '').lower(), 999))
-    
-    return all_vulnerabilities
-
-@app.get("/api/config")
-async def get_config():
-    """Get scanner configuration"""
-    # Дефолтная конфигурация
-    default_config = {
-        "scan_timeout": 3600,
-        "max_concurrent_scans": 3,
-        "nmap_options": "-sS -sV -O",
-        "dirsearch_wordlist": "/usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt",
-        "user_agent": "AKUMA-Scanner/2.0",
-        "request_delay": 0.1,
-        "thread_count": 10,
-        "enable_aggressive_scan": False,
-        "enable_service_detection": True,
-        "enable_os_detection": True,
-        "save_raw_output": True,
-        "auto_update_wordlists": False,
-        "notification_email": "",
-        "webhook_url": ""
-    }
-    
-    return default_config
-
-@app.post("/api/config")
-async def save_config(config_data: dict):
-    """Save scanner configuration"""
-    # В реальной реализации здесь бы сохранялась конфигурация в файл
-    # Для демо просто возвращаем успех
-    return {"status": "success", "message": "Configuration saved"}
-
-@app.post("/api/scans/{scan_id}/report")
-async def generate_report(scan_id: str, report_request: dict):
-    """Generate report for a specific scan"""
-    if scan_id not in scans:
-        raise HTTPException(status_code=404, detail="Scan not found")
-    
-    scan = scans[scan_id]
-    report_type = report_request.get('format', 'summary')
-    
-    # Генерируем простой HTML отчет
-    html_content = f"""
-<!DOCTYPE html>
-<html>
-<head>
-    <title>AKUMA Scanner Report</title>
-    <style>
-        body {{ font-family: 'Courier New', monospace; background: #0d1117; color: #00ff00; }}
-        .header {{ border-bottom: 2px solid #00ff00; padding: 20px; }}
-        .section {{ margin: 20px 0; padding: 15px; border: 1px solid #00ff00; }}
-        .critical {{ color: #ff0000; }}
-        .high {{ color: #ff9800; }}
-        .medium {{ color: #ffeb3b; }}
-        .low {{ color: #4caf50; }}
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>🔍 AKUMA Scanner Report</h1>
-        <p><strong>Target:</strong> {scan.get('target', 'Unknown')}</p>
-        <p><strong>Scan Type:</strong> {scan.get('scan_type', 'Unknown')}</p>
-        <p><strong>Date:</strong> {scan.get('created_at', 'Unknown')}</p>
-        <p><strong>Status:</strong> {scan.get('status', 'Unknown')}</p>
-    </div>
-    
-    <div class="section">
-        <h2>📊 Executive Summary</h2>
-        <p>Security assessment completed for {scan.get('target', 'target')}.</p>
-        <p>Total vulnerabilities found: {len(scan.get('vulnerabilities', []))}</p>
-        <p>Open ports discovered: {len(scan.get('ports', []))}</p>
-    </div>
-    
-    <div class="section">
-        <h2>🛡️ Vulnerabilities</h2>
-        <ul>
-    """
-    
-    for vuln in scan.get('vulnerabilities', []):
-        severity_class = vuln.get('severity', '').lower()
-        html_content += f"""
-            <li class="{severity_class}">
-                <strong>[{vuln.get('severity', 'UNKNOWN').upper()}]</strong> 
-                {vuln.get('title', 'Unknown Vulnerability')}<br>
-                <small>URL: {vuln.get('url', 'N/A')}</small>
-            </li>
-        """
-    
-    html_content += """
-        </ul>
-    </div>
-    
-    <div class="section">
-        <h2>🔌 Network Analysis</h2>
-        <ul>
-    """
-    
-    for port in scan.get('ports', []):
-        html_content += f"""
-            <li>{port.get('port', 'Unknown')}/{port.get('protocol', 'tcp')} - {port.get('service', 'Unknown')}</li>
-        """
-    
-    html_content += """
-        </ul>
-    </div>
-    
-    <div class="section">
-        <h2>💡 Recommendations</h2>
-        <ul>
-            <li>Patch all critical and high severity vulnerabilities immediately</li>
-            <li>Review and close unnecessary open ports</li>
-            <li>Implement regular security scanning</li>
-            <li>Keep all software components updated</li>
-        </ul>
-    </div>
-    
-    <div class="section">
-        <p><small>Report generated by AKUMA Scanner v2.0</small></p>
-    </div>
-</body>
-</html>
-    """
-    
-    from fastapi.responses import HTMLResponse
-    return HTMLResponse(content=html_content)
-
-@app.get("/api/stats")
-async def get_stats():
-    """Get system statistics"""
-    total_scans = len(scans)
-    active_scans = len([s for s in scans.values() if s.get('status') == 'running'])
-    
-    # Подсчитываем уязвимости
-    all_vulns = []
-    for scan in scans.values():
-        all_vulns.extend(scan.get('vulnerabilities', []))
-    
-    total_vulnerabilities = len(all_vulns)
-    critical_issues = len([v for v in all_vulns if v.get('severity', '').lower() == 'critical'])
-    
-    return {
-        "totalScans": total_scans,
-        "activeScans": active_scans,
-        "vulnerabilities": total_vulnerabilities,
-        "criticalIssues": critical_issues
-    }
