@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import asyncio
 import json
 import os
@@ -20,7 +19,6 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="AKUMA Web Scanner API", version="2.0")
 
-=======
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, UploadFile, File, Form, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, HTMLResponse
@@ -47,7 +45,6 @@ app = FastAPI(
 )
 
 # CORS middleware
->>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -56,7 +53,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-<<<<<<< HEAD
 # Глобальные переменные для хранения данных
 scans: Dict[str, dict] = {}
 scan_logs: Dict[str, List[str]] = {}
@@ -1047,7 +1043,6 @@ async def get_stats():
     
     total_vulnerabilities = len(all_vulns)
     critical_issues = len([v for v in all_vulns if v.get('severity', '').lower() == 'critical'])
-=======
 # Data models
 class ScanRequest(BaseModel):
     targets: List[str]
@@ -1296,7 +1291,6 @@ async def get_stats():
         if 'vulnerabilities' in scan:
             total_vulnerabilities += len(scan['vulnerabilities'])
             critical_issues += len([v for v in scan['vulnerabilities'] if v['severity'] == 'critical'])
->>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
     
     return {
         "totalScans": total_scans,
@@ -1305,7 +1299,6 @@ async def get_stats():
         "criticalIssues": critical_issues
     }
 
-<<<<<<< HEAD
 def find_tool_path(tool_name):
     """Находит полный путь к инструменту"""
     import shutil
@@ -1330,7 +1323,6 @@ HTTPX_PATH = find_tool_path("httpx")
 NUCLEI_PATH = find_tool_path("nuclei")
 DIRSEARCH_PATH = find_tool_path("dirsearch")
 WHATWEB_PATH = find_tool_path("whatweb")
-=======
 @app.post("/api/scans")
 async def create_scan(scan_request: ScanRequest, background_tasks: BackgroundTasks):
     """Create a new scan"""
@@ -1514,4 +1506,3 @@ async def websocket_endpoint(websocket: WebSocket, scan_id: str):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
->>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8

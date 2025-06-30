@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-<<<<<<< HEAD
 import { useNavigate } from 'react-router-dom';
 import './NewScan.css';
 import { API_BASE_URL } from '../config/api';
@@ -42,7 +41,6 @@ const NewScan = () => {
       };
       reader.readAsText(file);
     }
-=======
 
 const NewScan = ({ onScanCreated }) => {
   const [inputMethod, setInputMethod] = useState('manual');
@@ -57,12 +55,10 @@ const NewScan = ({ onScanCreated }) => {
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
->>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-<<<<<<< HEAD
     setLoading(true);
     setError('');
 
@@ -97,7 +93,6 @@ const NewScan = ({ onScanCreated }) => {
       setError('Network error: ' + err.message);
     } finally {
       setLoading(false);
-=======
     setIsSubmitting(true);
 
     try {
@@ -154,13 +149,11 @@ const NewScan = ({ onScanCreated }) => {
       console.error('Error creating scan:', error);
     } finally {
       setIsSubmitting(false);
->>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
     }
   };
 
   return (
     <div className="new-scan">
-<<<<<<< HEAD
       <div className="new-scan-header">
         <h2>🎯 Create New Security Scan</h2>
         <p>Configure your cybersecurity assessment</p>
@@ -317,7 +310,6 @@ const NewScan = ({ onScanCreated }) => {
           </button>
         </div>
       </form>
-=======
       <div className="card">
         <div className="card-header">
           <div className="card-title">
@@ -651,7 +643,6 @@ const NewScan = ({ onScanCreated }) => {
           }
         }
       `}</style>
->>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
     </div>
   );
 };

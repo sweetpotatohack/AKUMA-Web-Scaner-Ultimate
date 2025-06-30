@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import React from 'react';
 
 const Settings = () => {
@@ -6,7 +5,6 @@ const Settings = () => {
     <div style={{ padding: '20px', textAlign: 'center' }}>
       <h2>⚙️ Settings</h2>
       <p>Settings panel coming soon...</p>
-=======
 import React, { useState, useEffect } from 'react';
 
 const Settings = () => {
@@ -235,7 +233,6 @@ const Settings = () => {
           margin-top: 2rem;
         }
       `}</style>
->>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
     </div>
   );
 };

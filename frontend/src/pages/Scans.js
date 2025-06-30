@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import React, { useState, useEffect } from "react";
 
 const Scans = () => {
@@ -37,7 +36,6 @@ const Scans = () => {
         fetch(`http://127.0.0.1:8000/api/scans/${scan.id}/logs`).then(r => r.json()),
         fetch(`http://127.0.0.1:8000/api/scans/${scan.id}/ports`).then(r => r.json()),
         fetch(`http://127.0.0.1:8000/api/scans/${scan.id}/vulnerabilities`).then(r => r.json())
-=======
 import React, { useState } from 'react';
 import { usePolling } from '../hooks/useApi';
 import { api } from '../services/api';
@@ -58,12 +56,10 @@ const Scans = () => {
         api.getScan(scan.id),
         api.getScanProgress(scan.id),
         scan.status === 'completed' ? api.getScanResults(scan.id) : Promise.resolve(null)
->>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
       ]);
 
       setScanDetails({
         ...details,
-<<<<<<< HEAD
         logs,
         ports,
         vulnerabilities: vulns
@@ -79,7 +75,6 @@ const Scans = () => {
       case "completed": return "#00ff00";
       case "failed": return "#ff0000";
       default: return "#888";
-=======
         progress,
         results
       });
@@ -105,36 +100,28 @@ const Scans = () => {
       }
     } catch (error) {
       console.error('Failed to generate report:', error);
->>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
     }
   };
 
   if (loading) {
-<<<<<<< HEAD
     return <div className="loading">Loading scans...</div>;
-=======
     return <div className="loading">Loading scans</div>;
->>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
   }
 
   if (error) {
     return (
       <div className="card">
-<<<<<<< HEAD
         <h3 style={{ color: "#ff0000" }}>❌ Error Loading Scans</h3>
         <p>{error}</p>
-=======
         <h3 style={{ color: '#ff0000' }}>❌ Error Loading Scans</h3>
         <p>{error}</p>
         <button onClick={refetch} className="btn">🔄 Retry</button>
->>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
       </div>
     );
   }
 
   return (
     <div>
-<<<<<<< HEAD
       <h2 style={{ marginBottom: "30px", textAlign: "center" }}>📊 Scan Management</h2>
 
       <div style={{ display: "grid", gridTemplateColumns: selectedScan ? "1fr 1fr" : "1fr", gap: "20px" }}>
@@ -144,7 +131,6 @@ const Scans = () => {
           
           {scans.length === 0 ? (
             <div style={{ textAlign: "center", padding: "40px", color: "#888" }}>
-=======
       <h2 style={{ marginBottom: '30px', textAlign: 'center' }}>📊 Scan Management</h2>
 
       <div style={{ display: 'grid', gridTemplateColumns: selectedScan ? '1fr 1fr' : '1fr', gap: '20px' }}>
@@ -154,22 +140,17 @@ const Scans = () => {
           
           {!scans || scans.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '40px', color: '#888' }}>
->>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
               <p>No scans found.</p>
               <p>Create your first scan to get started!</p>
             </div>
           ) : (
-<<<<<<< HEAD
             <div style={{ maxHeight: "600px", overflowY: "auto" }}>
-=======
             <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
->>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
               {scans.map(scan => (
                 <div
                   key={scan.id}
                   onClick={() => handleScanClick(scan)}
                   style={{
-<<<<<<< HEAD
                     padding: "15px",
                     marginBottom: "10px",
                     background: selectedScan?.id === scan.id ? "rgba(0, 255, 0, 0.1)" : "rgba(0, 0, 0, 0.3)",
@@ -208,7 +189,6 @@ const Scans = () => {
                       {scan.vulnerabilities && scan.vulnerabilities.length > 0 && (
                         <div style={{ fontSize: "0.8em", color: "#ff6600" }}>
                           ⚠️ {scan.vulnerabilities.length} vulns
-=======
                     padding: '15px',
                     marginBottom: '10px',
                     background: selectedScan?.id === scan.id ? 'rgba(0, 255, 0, 0.1)' : 'rgba(0, 0, 0, 0.3)',
@@ -238,7 +218,6 @@ const Scans = () => {
                       {scan.vulnerabilities_count > 0 && (
                         <div style={{ fontSize: '0.8em', color: '#ff6600' }}>
                           ⚠️ {scan.vulnerabilities_count} issues
->>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
                         </div>
                       )}
                     </div>
@@ -252,7 +231,6 @@ const Scans = () => {
         {/* Scan Details */}
         {selectedScan && (
           <div className="card">
-<<<<<<< HEAD
             <h3 style={{ marginBottom: "20px" }}>🔍 Scan Details</h3>
             
             {scanDetails ? (
@@ -310,7 +288,6 @@ const Scans = () => {
                           Port {port.port}/{port.protocol} - {port.service || "Unknown"}
                         </div>
                       ))}
-=======
             <h3 style={{ marginBottom: '20px' }}>🔍 Scan Details</h3>
             
             {loadingDetails ? (
@@ -352,13 +329,11 @@ const Scans = () => {
                     <div style={{ fontSize: '0.9em', color: '#888' }}>
                       <p>URLs Scanned: {scanDetails.progress.urls_scanned}</p>
                       <p>Vulnerabilities Found: {scanDetails.progress.vulnerabilities_found}</p>
->>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
                     </div>
                   </div>
                 )}
 
                 {/* Vulnerabilities */}
-<<<<<<< HEAD
                 {scanDetails.vulnerabilities && (
                   <div style={{ marginBottom: "20px" }}>
                     <h4 style={{ marginBottom: "15px" }}>🚨 Vulnerabilities ({scanDetails.vulnerabilities.length})</h4>
@@ -381,7 +356,6 @@ const Scans = () => {
                             </div>
                             <div style={{ fontSize: "0.8em", color: "#ccc" }}>
                               <strong>Severity:</strong> {vuln.severity} | <strong>URL:</strong> {vuln.url}
-=======
                 {scanDetails.results && scanDetails.results.vulnerabilities && (
                   <div style={{ marginBottom: '20px' }}>
                     <h4 style={{ marginBottom: '15px' }}>🚨 Vulnerabilities Found</h4>
@@ -404,7 +378,6 @@ const Scans = () => {
                             </div>
                             <div style={{ fontSize: '0.9em', color: '#ccc' }}>
                               {vuln.description}
->>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
                             </div>
                           </div>
                         ))}
@@ -413,7 +386,6 @@ const Scans = () => {
                   </div>
                 )}
 
-<<<<<<< HEAD
                 {/* Logs */}
                 {scanDetails.logs && scanDetails.logs.length > 0 && (
                   <div style={{ marginBottom: "20px" }}>
@@ -433,7 +405,6 @@ const Scans = () => {
                         </div>
                       ))}
                     </div>
-=======
                 {/* Actions */}
                 {scanDetails.status === 'completed' && (
                   <div style={{ textAlign: 'center' }}>
@@ -444,16 +415,12 @@ const Scans = () => {
                     >
                       📄 Download HTML Report
                     </button>
->>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
                   </div>
                 )}
               </div>
             ) : (
-<<<<<<< HEAD
               <p>Loading scan details...</p>
-=======
               <p>Failed to load scan details.</p>
->>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
             )}
           </div>
         )}
@@ -462,8 +429,6 @@ const Scans = () => {
   );
 };
 
-<<<<<<< HEAD
-=======
 const getStatusColor = (status) => {
   switch (status) {
     case 'running': return '#ffff00';
@@ -484,5 +449,4 @@ const getSeverityIcon = (severity) => {
   }
 };
 
->>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
 export default Scans;

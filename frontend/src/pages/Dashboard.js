@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import React, { useState, useEffect } from "react";
 
 const Dashboard = () => {
@@ -124,7 +123,6 @@ const Dashboard = () => {
           <div className="stat-label">Total Scans</div>
         </div>
         <div className="stat-card">
-=======
 import React from 'react';
 import { useApi, usePolling } from '../hooks/useApi';
 import { api } from '../services/api';
@@ -155,12 +153,10 @@ const Dashboard = () => {
           <div className="stat-label">Vulnerabilities Found</div>
         </div>
         <div className="stat-card">
->>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
           <div className="stat-number">{runningScans.length}</div>
           <div className="stat-label">Active Scans</div>
         </div>
         <div className="stat-card">
-<<<<<<< HEAD
           <div className="stat-number">{totalPorts}</div>
           <div className="stat-label">Open Ports</div>
         </div>
@@ -207,7 +203,6 @@ const Dashboard = () => {
                   transition: "width 0.3s ease"
                 }}></div>
               </div>
-=======
           <div className="stat-number">{stats?.targets_scanned || 0}</div>
           <div className="stat-label">Targets Scanned</div>
         </div>
@@ -229,7 +224,6 @@ const Dashboard = () => {
                   <div style={{ fontSize: '0.9em' }}>Started: {new Date(scan.created_at).toLocaleString()}</div>
                 </div>
               </div>
->>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
             </div>
           ))}
         </div>
@@ -237,7 +231,6 @@ const Dashboard = () => {
 
       {/* Recent Scans */}
       <div className="card">
-<<<<<<< HEAD
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
           <h3>📊 Recent Scan Operations</h3>
           <span style={{ color: "#888", fontSize: "0.9em" }}>
@@ -389,7 +382,6 @@ const Dashboard = () => {
           </div>
         )}
       </div>
-=======
         <h3 style={{ marginBottom: '20px' }}>📊 Recent Scans</h3>
         {recentScans.length === 0 ? (
           <p style={{ color: '#888', textAlign: 'center', padding: '20px' }}>
@@ -449,13 +441,10 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
->>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
     </div>
   );
 };
 
-<<<<<<< HEAD
-=======
 const getStatusColor = (status) => {
   switch (status) {
     case 'running': return '#ffff00';
@@ -465,5 +454,4 @@ const getStatusColor = (status) => {
   }
 };
 
->>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
 export default Dashboard;

@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import "./styles/App.css";
@@ -57,7 +56,6 @@ function App() {
         </main>
       </div>
     </Router>
-=======
 import React, { useState, useEffect } from 'react';
 import './styles/App.css';
 
@@ -242,7 +240,6 @@ function App() {
         {renderContent()}
       </main>
     </div>
->>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
   );
 }
 

@@ -2,7 +2,6 @@
 
 All notable changes to AKUMA Web Scanner will be documented in this file.
 
-<<<<<<< HEAD
 ## [3.0.0] - 2025-06-30
 
 ### 🔥 Major Features Added
@@ -79,7 +78,6 @@ All notable changes to AKUMA Web Scanner will be documented in this file.
 - Basic scanning functionality
 - Simple web interface
 - Core nmap integration
-=======
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
@@ -195,4 +193,3 @@ chmod +x scripts/install.sh
 ---
 
 *For detailed installation and usage instructions, see the [README.md](README.md) and [docs/](docs/) directory.*
->>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8

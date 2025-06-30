@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 ```
     ▄▄▄       ██ ▄█▀ █    ██  ███▄ ▄███▓ ▄▄▄      
    ▒████▄     ██▄█▒  ██  ▓██▒▓██▒▀█▀ ██▒▒████▄    
@@ -176,7 +175,6 @@ AKUMA-Web-Scanner-Ultimate-3.0/
 ├── stop_akuma.sh          # Stop script
 └── README.md              # This file
 ```
-=======
 # 🔥 AKUMA Web Scanner
 
 <div align="center">
@@ -417,13 +415,11 @@ cp .env.example .env
 
 ### 📚 Interactive Documentation
 Visit http://localhost:8000/docs for complete API documentation with interactive testing interface.
->>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
 
 ## 🐛 Troubleshooting
 
 ### Common Issues
 
-<<<<<<< HEAD
 **1. httpx Permission Denied**
 ```bash
 sudo chmod +x /usr/bin/httpx
@@ -446,7 +442,6 @@ nuclei -update-templates
 ```bash
 sudo npm install -g n
 sudo n latest
-=======
 **🚫 Port Already in Use**
 ```bash
 # Check what's using the port
@@ -481,12 +476,10 @@ export LOG_LEVEL=DEBUG
 
 # Frontend debug mode
 export REACT_APP_DEBUG=true
->>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
 ```
 
 ## 🤝 Contributing
 
-<<<<<<< HEAD
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
 3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
@@ -512,7 +505,6 @@ This tool is for educational and authorized testing purposes only. Users are res
 **Made with ❤️ for the cybersecurity community**
 
 🔥 **Happy Hacking!** 🔥
-=======
 We welcome contributions! Here's how to get started:
 
 ### 🔄 Development Setup
@@ -585,4 +577,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
   <p><strong>🔥 AKUMA Web Scanner - Professional Security Testing Made Simple</strong></p>
   <p>Built with ❤️ for the cybersecurity community</p>
 </div>
->>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8

@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
@@ -177,7 +176,6 @@ const Dashboard = () => {
                   <div className="stat-fill critical" style={{width: `${Math.min(stats.criticalIssues * 20, 100)}%`}}></div>
                 </div>
               </div>
-=======
 import React, { useState, useEffect } from 'react';
 
 const Dashboard = ({ stats, scans, onScanSelect, onScanDelete }) => {
@@ -312,13 +310,11 @@ const Dashboard = ({ stats, scans, onScanSelect, onScanDelete }) => {
                 {scans.filter(s => s.status === 'completed').length}
               </div>
               <div className="stat-label">Completed</div>
->>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
             </div>
           </div>
         </div>
       </div>
 
-<<<<<<< HEAD
       {/* Recent Scans */}
       <div className="terminal-window">
         <div className="terminal-header">
@@ -392,7 +388,6 @@ const Dashboard = ({ stats, scans, onScanSelect, onScanDelete }) => {
           </pre>
         </div>
       </div>
-=======
       {/* Vulnerability Distribution Chart */}
       {totalVulns > 0 && (
         <div className="card mb-3 fade-in">
@@ -735,7 +730,6 @@ const Dashboard = ({ stats, scans, onScanSelect, onScanDelete }) => {
           }
         }
       `}</style>
->>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
     </div>
   );
 };

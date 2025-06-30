@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import React from 'react';
 
 const Vulnerabilities = () => {
@@ -6,7 +5,6 @@ const Vulnerabilities = () => {
     <div style={{ padding: '20px', textAlign: 'center' }}>
       <h2>🛡️ Vulnerabilities</h2>
       <p>Vulnerability management coming soon...</p>
-=======
 import React, { useState, useEffect } from 'react';
 
 const Vulnerabilities = () => {
@@ -513,7 +511,6 @@ const Vulnerabilities = () => {
           }
         }
       `}</style>
->>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
     </div>
   );
 };

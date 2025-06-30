@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import React from 'react';
 
 const Reports = () => {
@@ -6,7 +5,6 @@ const Reports = () => {
     <div style={{ padding: '20px', textAlign: 'center' }}>
       <h2>📋 Reports</h2>
       <p>Reporting module coming soon...</p>
-=======
 import React, { useState } from 'react';
 
 const Reports = ({ scans }) => {
@@ -147,7 +145,6 @@ const Reports = ({ scans }) => {
           }
         }
       `}</style>
->>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
     </div>
   );
 };

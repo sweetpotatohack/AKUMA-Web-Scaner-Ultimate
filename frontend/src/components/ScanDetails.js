@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -96,7 +95,6 @@ const ScanDetails = () => {
       setScannerResults(response.data);
     } catch (err) {
       console.error('Failed to fetch scanner results');
-=======
 import React, { useState, useEffect, useRef } from 'react';
 
 const ScanDetails = ({ scan, onBack }) => {
@@ -208,13 +206,11 @@ const ScanDetails = ({ scan, onBack }) => {
       case 'success': return '✅';
       case 'info': return 'ℹ️';
       default: return '📝';
->>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
     }
   };
 
   const getSeverityColor = (severity) => {
     switch (severity?.toLowerCase()) {
-<<<<<<< HEAD
       case 'critical': return '#f44336';
       case 'high': return '#ff9800';
       case 'medium': return '#ffeb3b';
@@ -527,7 +523,6 @@ const ScanDetails = ({ scan, onBack }) => {
           </div>
         )}
       </div>
-=======
       case 'critical': return 'var(--error)';
       case 'high': return 'var(--warning)';
       case 'medium': return 'var(--info)';
@@ -1136,7 +1131,6 @@ const ScanDetails = ({ scan, onBack }) => {
           }
         }
       `}</style>
->>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
     </div>
   );
 };
