@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 FROM python:3.9-slim
 
 # Устанавливаем системные зависимости
@@ -57,3 +58,16 @@ EXPOSE 8000
 
 # Запускаем приложение
 CMD ["python", "app.py"]
+=======
+FROM python:3.11-slim
+
+WORKDIR /app
+
+RUN pip install fastapi uvicorn python-multipart
+
+COPY app.py .
+
+EXPOSE 8000
+
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+>>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8

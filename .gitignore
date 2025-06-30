@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Dependencies
 node_modules/
 __pycache__/
@@ -8,6 +9,39 @@ __pycache__/
 env/
 venv/
 .venv/
+=======
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+>>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
 
 # IDEs
 .vscode/
@@ -18,6 +52,7 @@ venv/
 
 # OS
 .DS_Store
+<<<<<<< HEAD
 Thumbs.db
 
 # Logs
@@ -38,12 +73,50 @@ coverage/
 
 # Docker
 .dockerignore
+=======
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.eslintcache
+
+# React
+/frontend/build
+/frontend/dist
+
+# Docker
+docker-compose.override.yml
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# Reports
+reports/*.html
+reports/*.pdf
+reports/*.json
+>>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
 
 # Temporary files
 tmp/
 temp/
 *.tmp
 
+<<<<<<< HEAD
 # Environment variables
 .env
 .env.local
@@ -68,3 +141,22 @@ dist/
 results/
 reports/
 scans/
+=======
+# Security
+*.key
+*.pem
+*.crt
+secrets.json
+.env.local
+.env.production
+
+# Backup files
+*.backup
+*.bak
+*.old
+
+# Scanner specific
+scan_results/
+target_lists/
+*.scan
+>>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8

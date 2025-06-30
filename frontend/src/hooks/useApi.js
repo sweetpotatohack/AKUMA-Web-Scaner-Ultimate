@@ -13,14 +13,21 @@ export const useApi = (apiCall, dependencies = []) => {
       try {
         setLoading(true);
         setError(null);
+<<<<<<< HEAD
         console.log('🔄 API Call starting...');
         const result = await apiCall();
         console.log('✅ API Call success:', result);
+=======
+        const result = await apiCall();
+>>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
         if (mounted) {
           setData(result);
         }
       } catch (err) {
+<<<<<<< HEAD
         console.error('❌ API Call failed:', err);
+=======
+>>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
         if (mounted) {
           setError(err.message || 'An error occurred');
         }
@@ -65,16 +72,23 @@ export const usePolling = (apiCall, interval = 5000, dependencies = []) => {
 
     const fetchData = async () => {
       try {
+<<<<<<< HEAD
         console.log('🔄 Polling API call...');
         const result = await apiCall();
         console.log('✅ Polling success:', result);
+=======
+        const result = await apiCall();
+>>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
         if (mounted) {
           setData(result);
           setLoading(false);
           setError(null);
         }
       } catch (err) {
+<<<<<<< HEAD
         console.error('❌ Polling failed:', err);
+=======
+>>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
         if (mounted) {
           setError(err.message || 'An error occurred');
           setLoading(false);
@@ -82,10 +96,14 @@ export const usePolling = (apiCall, interval = 5000, dependencies = []) => {
       }
     };
 
+<<<<<<< HEAD
     // Initial fetch
     fetchData();
     
     // Set up polling
+=======
+    fetchData();
+>>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
     intervalId = setInterval(fetchData, interval);
 
     return () => {

@@ -2,7 +2,11 @@ version: '3.8'
 
 services:
   backend:
+<<<<<<< HEAD
     image: python:3.9-slim
+=======
+    build: ./backend
+>>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
     container_name: akuma_backend
     ports:
       - "8000:8000"
@@ -11,6 +15,7 @@ services:
     volumes:
       - ./backend:/app
       - /var/run/docker.sock:/var/run/docker.sock
+<<<<<<< HEAD
     working_dir: /app
     command: >
       bash -c "apt-get update && 
@@ -23,11 +28,14 @@ services:
                go install github.com/ffuf/ffuf@latest && 
                pip install -r requirements.txt && 
                python app.py"
+=======
+>>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
     restart: unless-stopped
     networks:
       - akuma_network
 
   frontend:
+<<<<<<< HEAD
     image: node:18-alpine
     container_name: akuma_frontend
     ports:
@@ -37,6 +45,12 @@ services:
     working_dir: /app
     command: >
       sh -c "npm install && npm start"
+=======
+    build: ./frontend
+    container_name: akuma_frontend
+    ports:
+      - "3000:3000"
+>>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
     depends_on:
       - backend
     restart: unless-stopped
