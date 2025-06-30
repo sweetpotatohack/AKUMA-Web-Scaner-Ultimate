@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test</title>
+</head>
+<body>
+    <h1>API Test</h1>
+    <div id="result"></div>
+    
+    <script>
+        async function testAPI() {
+            const result = document.getElementById('result');
+            
+            try {
+                // Test different API URLs
+                const urls = [
+                    'http://localhost:8000/api/stats',
+                    'http://127.0.0.1:8000/api/stats',
+                    `http://${window.location.hostname}:8000/api/stats`
+                ];
+                
+                for (const url of urls) {
+                    try {
+                        console.log(`Testing: ${url}`);
+                        const response = await fetch(url);
+                        const data = await response.json();
+                        result.innerHTML += `<p>✅ ${url}: ${JSON.stringify(data)}</p>`;
+                        break; // Success
+                    } catch (error) {
+                        result.innerHTML += `<p>❌ ${url}: ${error.message}</p>`;
+                    }
+                }
+            } catch (error) {
+                result.innerHTML += `<p>Error: ${error.message}</p>`;
+            }
+        }
+        
+        testAPI();
+    </script>
+</body>
+</html>

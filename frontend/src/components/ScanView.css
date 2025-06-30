@@ -1,0 +1,524 @@
+.scan-view {
+  padding: 20px;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+  color: #00ff41;
+}
+
+.scan-view-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.scan-view-header h1 {
+  margin: 0;
+  color: #00ff41;
+  text-shadow: 0 0 10px #00ff41;
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 50vh;
+  gap: 20px;
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 3px solid #333;
+  border-top: 3px solid #00ff41;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error {
+  text-align: center;
+  padding: 40px;
+}
+
+.error h2 {
+  color: #ff4444;
+  margin-bottom: 20px;
+}
+
+/* Вкладки */
+.tabs {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #333;
+}
+
+.tab {
+  background: #1a1a2e;
+  border: none;
+  color: #888;
+  padding: 15px 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-top: 2px solid transparent;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.tab:hover {
+  background: #252540;
+  color: #00ff41;
+}
+
+.tab.active {
+  background: #00ff41;
+  color: #000;
+  border-top-color: #00ff41;
+  box-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+}
+
+.tab-content {
+  background: rgba(26, 26, 46, 0.8);
+  border-radius: 10px;
+  padding: 30px;
+  min-height: 500px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 255, 65, 0.2);
+}
+
+/* Overview Tab */
+.overview-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.scan-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.scan-info h2 {
+  margin: 0 0 10px 0;
+  color: #00ff41;
+  font-size: 28px;
+  text-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+}
+
+.scan-meta {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  font-size: 14px;
+}
+
+.scan-meta span {
+  padding: 5px 12px;
+  border-radius: 15px;
+  background: rgba(0, 255, 65, 0.1);
+  border: 1px solid rgba(0, 255, 65, 0.3);
+}
+
+.status.running {
+  background: rgba(255, 193, 7, 0.2);
+  border-color: #ffc107;
+  color: #ffc107;
+}
+
+.status.completed {
+  background: rgba(40, 167, 69, 0.2);
+  border-color: #28a745;
+  color: #28a745;
+}
+
+.status.failed {
+  background: rgba(220, 53, 69, 0.2);
+  border-color: #dc3545;
+  color: #dc3545;
+}
+
+.progress-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 300px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 20px;
+  background: #333;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 255, 65, 0.3);
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00ff41, #00cc33);
+  transition: width 0.5s ease;
+  box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+}
+
+.progress-text {
+  font-size: 18px;
+  font-weight: bold;
+  color: #00ff41;
+  text-align: center;
+}
+
+.phase-text {
+  font-size: 14px;
+  color: #888;
+  text-align: center;
+}
+
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  background: rgba(0, 255, 65, 0.05);
+  border: 1px solid rgba(0, 255, 65, 0.3);
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 255, 65, 0.2);
+}
+
+.card h3 {
+  margin: 0 0 10px 0;
+  color: #888;
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
+.card-number {
+  font-size: 32px;
+  font-weight: bold;
+  color: #00ff41;
+  text-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+}
+
+.card-text {
+  font-size: 18px;
+  color: #00ff41;
+}
+
+/* Logs Tab */
+.logs-tab {
+  height: 600px;
+  display: flex;
+  flex-direction: column;
+}
+
+.logs-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.logs-header h3 {
+  margin: 0;
+  color: #00ff41;
+}
+
+.logs-container {
+  flex: 1;
+  background: #000;
+  border: 1px solid rgba(0, 255, 65, 0.3);
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.no-logs {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #888;
+}
+
+.logs-icon {
+  font-size: 48px;
+  margin-bottom: 20px;
+}
+
+.logs-content {
+  padding: 20px;
+  height: 100%;
+  overflow-y: auto;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.log-entry {
+  margin-bottom: 5px;
+  word-wrap: break-word;
+}
+
+.log-text {
+  color: #00ff41;
+}
+
+.logs-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.logs-content::-webkit-scrollbar-track {
+  background: #333;
+}
+
+.logs-content::-webkit-scrollbar-thumb {
+  background: #00ff41;
+  border-radius: 4px;
+}
+
+/* Vulnerabilities Tab */
+.vulnerabilities-tab h3 {
+  margin: 0 0 20px 0;
+  color: #00ff41;
+}
+
+.no-data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  color: #888;
+}
+
+.no-data-icon {
+  font-size: 48px;
+  margin-bottom: 20px;
+}
+
+.vulnerabilities-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.vulnerability-item {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+  padding: 20px;
+  border-left: 4px solid #888;
+}
+
+.vulnerability-item.critical {
+  border-left-color: #dc3545;
+  background: rgba(220, 53, 69, 0.1);
+}
+
+.vulnerability-item.high {
+  border-left-color: #fd7e14;
+  background: rgba(253, 126, 20, 0.1);
+}
+
+.vulnerability-item.medium {
+  border-left-color: #ffc107;
+  background: rgba(255, 193, 7, 0.1);
+}
+
+.vulnerability-item.low {
+  border-left-color: #28a745;
+  background: rgba(40, 167, 69, 0.1);
+}
+
+.vuln-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.vuln-header h4 {
+  margin: 0;
+  color: #00ff41;
+}
+
+.severity {
+  padding: 4px 12px;
+  border-radius: 15px;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.severity.critical {
+  background: #dc3545;
+  color: white;
+}
+
+.severity.high {
+  background: #fd7e14;
+  color: white;
+}
+
+.severity.medium {
+  background: #ffc107;
+  color: black;
+}
+
+.severity.low {
+  background: #28a745;
+  color: white;
+}
+
+.vuln-description,
+.vuln-url,
+.vuln-method,
+.vuln-parameter,
+.vuln-payload,
+.vuln-solution,
+.vuln-source {
+  margin: 8px 0;
+  color: #ccc;
+  font-size: 14px;
+}
+
+.vuln-payload code {
+  background: rgba(0, 255, 65, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #00ff41;
+  font-family: 'Courier New', monospace;
+}
+
+/* Ports Tab */
+.ports-tab h3 {
+  margin: 0 0 20px 0;
+  color: #00ff41;
+}
+
+.ports-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 15px;
+}
+
+.port-item {
+  background: rgba(0, 255, 65, 0.05);
+  border: 1px solid rgba(0, 255, 65, 0.3);
+  border-radius: 10px;
+  padding: 15px;
+  transition: all 0.3s ease;
+}
+
+.port-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 255, 65, 0.2);
+}
+
+.port-number {
+  font-size: 18px;
+  font-weight: bold;
+  color: #00ff41;
+  margin-bottom: 8px;
+}
+
+.port-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.port-service {
+  color: #ccc;
+  font-weight: 500;
+}
+
+.port-version {
+  color: #888;
+  font-size: 12px;
+}
+
+.port-status.open {
+  color: #28a745;
+  font-weight: bold;
+}
+
+/* Кнопки */
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn-primary {
+  background: #00ff41;
+  color: #000;
+}
+
+.btn-primary:hover {
+  background: #00cc33;
+  box-shadow: 0 0 15px rgba(0, 255, 65, 0.5);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: #00ff41;
+  border: 1px solid #00ff41;
+}
+
+.btn-secondary:hover {
+  background: #00ff41;
+  color: #000;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .scan-view {
+    padding: 10px;
+  }
+  
+  .scan-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .tabs {
+    flex-wrap: wrap;
+  }
+  
+  .tab {
+    flex: 1;
+    min-width: 120px;
+  }
+  
+  .summary-cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .ports-list {
+    grid-template-columns: 1fr;
+  }
+}

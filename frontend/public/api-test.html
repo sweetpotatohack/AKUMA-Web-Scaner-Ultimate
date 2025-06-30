@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AKUMA API Test</title>
+    <style>
+        body { font-family: monospace; background: #1a1a1a; color: #00ff00; padding: 20px; }
+        .result { margin: 10px 0; padding: 10px; background: #2a2a2a; border-radius: 5px; }
+        .success { border-left: 4px solid #00ff00; }
+        .error { border-left: 4px solid #ff0000; }
+    </style>
+</head>
+<body>
+    <h1>🔥 AKUMA API Test</h1>
+    <div id="results"></div>
+    
+    <script>
+        async function testAPI() {
+            const results = document.getElementById("results");
+            
+            const tests = [
+                { name: "Stats", url: "http://127.0.0.1:8000/api/stats" },
+                { name: "Scans", url: "http://127.0.0.1:8000/api/scans" },
+                { name: "Health", url: "http://127.0.0.1:8000/health" }
+            ];
+            
+            for (const test of tests) {
+                try {
+                    console.log(`Testing ${test.name}...`);
+                    const response = await fetch(test.url);
+                    const data = await response.json();
+                    
+                    results.innerHTML += `
+                        <div class="result success">
+                            <h3>✅ ${test.name}</h3>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } catch (error) {
+                    results.innerHTML += `
+                        <div class="result error">
+                            <h3>❌ ${test.name}</h3>
+                            <pre>Error: ${error.message}</pre>
+                        </div>
+                    `;
+                }
+            }
+        }
+        
+        testAPI();
+        setInterval(testAPI, 10000); // Repeat every 10 seconds
+    </script>
+</body>
+</html>

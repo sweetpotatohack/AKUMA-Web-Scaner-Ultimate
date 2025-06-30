@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  backend:
+    image: python:3.9-slim
+    container_name: akuma_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./backend:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+    working_dir: /app
+    command: >
+      bash -c "apt-get update && 
+               apt-get install -y git wget curl nmap dnsutils iputils-ping build-essential ruby ruby-dev && 
+               wget -q https://go.dev/dl/go1.24.4.linux-amd64.tar.gz && 
+               tar -C /usr/local -xzf go1.24.4.linux-amd64.tar.gz && 
+               export PATH=/usr/local/go/bin:$PATH && 
+               go install github.com/projectdiscovery/httpx/cmd/httpx@latest && 
+               go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest && 
+               go install github.com/ffuf/ffuf@latest && 
+               pip install -r requirements.txt && 
+               python app.py"
+    restart: unless-stopped
+    networks:
+      - akuma_network
+
+  frontend:
+    image: node:18-alpine
+    container_name: akuma_frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+    working_dir: /app
+    command: >
+      sh -c "npm install && npm start"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - akuma_network
+
+  redis:
+    image: redis:alpine
+    container_name: akuma_redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - akuma_network
+
+networks:
+  akuma_network:
+    driver: bridge

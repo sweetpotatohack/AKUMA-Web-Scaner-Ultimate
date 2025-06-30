@@ -1,0 +1,444 @@
+/* Kali Linux Terminal Theme */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Ubuntu Mono', 'Courier New', monospace;
+  background: #0c0c0c;
+  color: #00ff00;
+  overflow-x: hidden;
+  line-height: 1.4;
+}
+
+/* Terminal-like scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #00ff00;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #00cc00;
+}
+
+.App {
+  min-height: 100vh;
+  background: #0c0c0c;
+  position: relative;
+}
+
+/* Terminal Window Header */
+.app-header {
+  background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+  border-bottom: 2px solid #00ff00;
+  padding: 10px 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 10px rgba(0, 255, 0, 0.3);
+}
+
+.header-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Terminal window controls */
+.header-content::before {
+  content: '● ● ●';
+  color: #ff0000;
+  font-size: 12px;
+  letter-spacing: 5px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex: 1;
+  justify-content: center;
+}
+
+.logo-icon {
+  font-size: 24px;
+  animation: terminal-blink 2s infinite;
+}
+
+@keyframes terminal-blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0.3; }
+}
+
+.logo h1 {
+  font-size: 24px;
+  color: #00ff00;
+  text-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+  letter-spacing: 2px;
+  font-weight: normal;
+  margin: 0;
+}
+
+.logo-subtitle {
+  font-size: 10px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.7;
+}
+
+/* Terminal info display */
+.terminal-info {
+  font-size: 10px;
+  color: #666;
+  font-family: 'Ubuntu Mono', monospace;
+}
+
+/* Main Content */
+.main-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+  min-height: calc(100vh - 120px);
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Terminal-like containers */
+.terminal-window {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.terminal-header {
+  background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+  padding: 8px 15px;
+  border-bottom: 1px solid #333;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+}
+
+.terminal-title {
+  color: #00ff00;
+  font-weight: bold;
+}
+
+.terminal-controls {
+  color: #666;
+}
+
+.terminal-body {
+  padding: 20px;
+  background: #0c0c0c;
+  min-height: 200px;
+}
+
+/* Command prompt style */
+.prompt {
+  color: #00ff00;
+  font-weight: bold;
+}
+
+.prompt::before {
+  content: 'root@kali:~# ';
+  color: #00ff00;
+}
+
+/* Status indicators */
+.status-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.status-running {
+  background: #ffaa00;
+  animation: pulse-orange 1s infinite;
+}
+
+.status-completed {
+  background: #00ff00;
+}
+
+.status-failed {
+  background: #ff0000;
+}
+
+@keyframes pulse-orange {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Buttons in terminal style */
+.terminal-button {
+  background: transparent;
+  border: 1px solid #00ff00;
+  color: #00ff00;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-family: 'Ubuntu Mono', monospace;
+  font-size: 12px;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.terminal-button:hover {
+  background: rgba(0, 255, 0, 0.1);
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+}
+
+.terminal-button.danger {
+  border-color: #ff0000;
+  color: #ff0000;
+}
+
+.terminal-button.danger:hover {
+  background: rgba(255, 0, 0, 0.1);
+  box-shadow: 0 0 10px rgba(255, 0, 0, 0.3);
+}
+
+/* Input fields */
+.terminal-input {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  color: #00ff00;
+  padding: 10px;
+  font-family: 'Ubuntu Mono', monospace;
+  width: 100%;
+  border-radius: 2px;
+}
+
+.terminal-input:focus {
+  outline: none;
+  border-color: #00ff00;
+  box-shadow: 0 0 5px rgba(0, 255, 0, 0.3);
+}
+
+/* Tables in terminal style */
+.terminal-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Ubuntu Mono', monospace;
+  font-size: 12px;
+}
+
+.terminal-table th,
+.terminal-table td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid #333;
+}
+
+.terminal-table th {
+  background: #2a2a2a;
+  color: #00ff00;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.terminal-table tr:hover {
+  background: rgba(0, 255, 0, 0.05);
+}
+
+/* Loading states */
+.loading {
+  text-align: center;
+  padding: 50px;
+  color: #00ff00;
+  font-family: 'Ubuntu Mono', monospace;
+}
+
+.loading::before {
+  content: '[';
+  color: #666;
+}
+
+.loading::after {
+  content: ']';
+  color: #666;
+}
+
+.spinner {
+  display: inline-block;
+  margin: 0 10px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Error messages */
+.error {
+  background: rgba(255, 0, 0, 0.1);
+  border: 1px solid #ff0000;
+  color: #ff0000;
+  padding: 15px;
+  margin: 10px 0;
+  font-family: 'Ubuntu Mono', monospace;
+}
+
+.error::before {
+  content: '[ERROR] ';
+  font-weight: bold;
+}
+
+/* Success messages */
+.success {
+  background: rgba(0, 255, 0, 0.1);
+  border: 1px solid #00ff00;
+  color: #00ff00;
+  padding: 15px;
+  margin: 10px 0;
+  font-family: 'Ubuntu Mono', monospace;
+}
+
+.success::before {
+  content: '[OK] ';
+  font-weight: bold;
+}
+
+/* Logs display */
+.log-output {
+  background: #0c0c0c;
+  border: 1px solid #333;
+  padding: 15px;
+  font-family: 'Ubuntu Mono', monospace;
+  font-size: 11px;
+  max-height: 400px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  color: #00ff00;
+}
+
+.log-entry {
+  margin-bottom: 2px;
+  padding: 2px 0;
+}
+
+.log-entry:hover {
+  background: rgba(0, 255, 0, 0.05);
+}
+
+/* Progress bars */
+.progress-container {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  height: 20px;
+  margin: 10px 0;
+  position: relative;
+}
+
+.progress-bar {
+  background: linear-gradient(90deg, #00ff00, #00cc00);
+  height: 100%;
+  transition: width 0.3s ease;
+  position: relative;
+}
+
+.progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #000;
+  font-size: 11px;
+  font-weight: bold;
+  text-shadow: none;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .header-content {
+    padding: 0 15px;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .logo {
+    justify-content: flex-start;
+  }
+  
+  .logo h1 {
+    font-size: 18px;
+  }
+  
+  .main-content {
+    padding: 15px;
+  }
+  
+  .terminal-body {
+    padding: 15px;
+  }
+}
+
+/* Special effects for critical elements */
+.critical-blink {
+  animation: critical-blink 1s infinite;
+}
+
+@keyframes critical-blink {
+  0%, 50% { color: #ff0000; }
+  51%, 100% { color: #ff6666; }
+}
+
+/* ASCII Art support */
+.ascii-art {
+  font-family: 'Ubuntu Mono', monospace;
+  font-size: 10px;
+  line-height: 1;
+  color: #00ff00;
+  white-space: pre;
+}
+
+/* Matrix effect overlay for special elements */
+.matrix-overlay {
+  position: relative;
+  overflow: hidden;
+}
+
+.matrix-overlay::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 0, 0.1), transparent);
+  animation: matrix-scan 3s infinite;
+}
+
+@keyframes matrix-scan {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}

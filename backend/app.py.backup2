@@ -1,0 +1,595 @@
+import asyncio
+import json
+import os
+import subprocess
+import tempfile
+import uuid
+from datetime import datetime
+from typing import Dict, List, Optional
+import logging
+import aiofiles
+import requests
+from fastapi import FastAPI, HTTPException, BackgroundTasks, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+
+# Настройка логирования
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+app = FastAPI(title="AKUMA Web Scanner API", version="2.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Глобальные переменные для хранения данных
+scans: Dict[str, dict] = {}
+scan_logs: Dict[str, List[str]] = {}
+websocket_connections: List[WebSocket] = []
+
+class ScanRequest(BaseModel):
+    targets: List[str]
+    scanTypes: Optional[List[str]] = ["basic"]
+    description: Optional[str] = ""
+
+class ScanPhase:
+    DISCOVERY = "Discovery"
+    PORT_SCAN = "Port Scan"
+    WEB_PROBE = "Web Probe"
+    VULNERABILITY_SCAN = "Vulnerability Scan"
+    DEEP_ANALYSIS = "Deep Analysis"
+
+async def log_message(scan_id: str, message: str):
+    """Логирование сообщения для конкретного скана"""
+    if scan_id not in scan_logs:
+        scan_logs[scan_id] = []
+    
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_entry = f"[{timestamp}] {message}"
+    scan_logs[scan_id].append(log_entry)
+    
+    # Записываем в файл лога
+    log_dir = scans.get(scan_id, {}).get('log_dir')
+    if log_dir:
+        log_file = os.path.join(log_dir, 'scan.log')
+        try:
+            async with aiofiles.open(log_file, 'a') as f:
+                await f.write(log_entry + '\n')
+        except Exception as e:
+            logger.error(f"Failed to write to log file: {e}")
+    
+    # Отправляем через WebSocket
+    for connection in websocket_connections:
+        try:
+            await connection.send_json({
+                "type": "log",
+                "scan_id": scan_id,
+                "message": log_entry
+            })
+        except:
+            pass
+
+async def run_command(scan_id: str, command: str, description: str):
+    """Выполнение команды с логированием"""
+    await log_message(scan_id, f"🔧 {description}")
+    await log_message(scan_id, f"💻 Executing: {command}")
+    
+    try:
+        process = await asyncio.create_subprocess_shell(
+            command,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+        
+        stdout, stderr = await process.communicate()
+        
+        if stdout:
+            await log_message(scan_id, f"✅ Output: {stdout.decode()[:500]}")
+        if stderr:
+            await log_message(scan_id, f"⚠️ Error: {stderr.decode()[:500]}")
+            
+        return stdout.decode(), stderr.decode(), process.returncode
+    except Exception as e:
+        await log_message(scan_id, f"❌ Command failed: {str(e)}")
+        return "", str(e), 1
+
+async def get_webhook_url():
+    """Получение webhook URL от webhook.site"""
+    try:
+        response = requests.post("https://webhook.site/token", timeout=10)
+        if response.status_code == 201:
+            data = response.json()
+            return f"https://webhook.site/{data['uuid']}"
+    except:
+        pass
+    return None
+
+async def phase_discovery(scan_id: str, target: str):
+    """Этап 1: Discovery - базовое обнаружение цели"""
+    await log_message(scan_id, f"🔍 Starting {ScanPhase.DISCOVERY} phase for {target}")
+    
+    # DNS resolution
+    stdout, stderr, code = await run_command(
+        scan_id, 
+        f"nslookup {target}",
+        f"Resolving DNS for {target}"
+    )
+    
+    # Ping test
+    stdout, stderr, code = await run_command(
+        scan_id,
+        f"ping -c 3 {target}",
+        f"Testing connectivity to {target}"
+    )
+    
+    scans[scan_id]['progress'] = 20
+    scans[scan_id]['phase'] = ScanPhase.PORT_SCAN
+    
+    await log_message(scan_id, f"✅ {ScanPhase.DISCOVERY} phase completed")
+
+async def phase_port_scan(scan_id: str, target: str):
+    """Этап 2: Port Scan - полное сканирование портов"""
+    await log_message(scan_id, f"🔍 Starting {ScanPhase.PORT_SCAN} phase for {target}")
+    
+    log_dir = scans[scan_id]['log_dir']
+    nmap_output = os.path.join(log_dir, 'nmap_result')
+    
+    # Полное сканирование портов с высокой скоростью
+    stdout, stderr, code = await run_command(
+        scan_id,
+        f"nmap -sV -p- --min-rate 5000 -oN {nmap_output} -oG {nmap_output}.gnmap {target}",
+        f"Running comprehensive port scan on {target}"
+    )
+    
+    # Парсинг результатов nmap
+    if os.path.exists(f"{nmap_output}.gnmap"):
+        parse_cmd = f'''grep "Ports:" "{nmap_output}.gnmap" | awk -F"[ /]" '{{
+            split($0, a, "Ports: "); 
+            split(a[2], ports, ", "); 
+            for (i in ports) {{ 
+                split(ports[i], p, "/"); 
+                if (p[1] ~ /^[0-9]+$/ && p[1] <= 65535) {{
+                    print $2":"p[1]; 
+                }}
+            }}
+        }}' > "{log_dir}/open_ports.txt"'''
+        
+        await run_command(scan_id, parse_cmd, "Parsing nmap results for open ports")
+        
+        # Читаем найденные порты
+        if os.path.exists(f"{log_dir}/open_ports.txt"):
+            with open(f"{log_dir}/open_ports.txt", 'r') as f:
+                open_ports = f.read().strip().split('\n')
+                await log_message(scan_id, f"📊 Found {len(open_ports)} open ports")
+                
+                # Добавляем порты в результаты
+                for port_line in open_ports:
+                    if ':' in port_line:
+                        ip, port = port_line.split(':')
+                        scans[scan_id]['ports'].append({
+                            'port': int(port),
+                            'protocol': 'TCP',
+                            'status': 'open',
+                            'service': 'unknown',
+                            'version': 'unknown'
+                        })
+    
+    scans[scan_id]['progress'] = 40
+    scans[scan_id]['phase'] = ScanPhase.WEB_PROBE
+    
+    await log_message(scan_id, f"✅ {ScanPhase.PORT_SCAN} phase completed")
+
+async def phase_web_probe(scan_id: str, target: str):
+    """Этап 3: Web Probe - проверка веб-сервисов"""
+    await log_message(scan_id, f"🔍 Starting {ScanPhase.WEB_PROBE} phase for {target}")
+    
+    log_dir = scans[scan_id]['log_dir']
+    
+    # Проверка веб-сервисов на открытых портах
+    if os.path.exists(f"{log_dir}/open_ports.txt"):
+        stdout, stderr, code = await run_command(
+            scan_id,
+            f"httpx -l {log_dir}/open_ports.txt -o {log_dir}/httpx_result.txt -silent",
+            "Probing web services on open ports"
+        )
+    else:
+        # Базовая проверка если нет списка портов
+        stdout, stderr, code = await run_command(
+            scan_id,
+            f"httpx -u {target} -o {log_dir}/httpx_result.txt -silent",
+            f"Probing web services on {target}"
+        )
+    
+    # Анализ веб-технологий с помощью whatweb
+    if os.path.exists(f"{log_dir}/httpx_result.txt"):
+        stdout, stderr, code = await run_command(
+            scan_id,
+            f"whatweb -i {log_dir}/httpx_result.txt --log-verbose={log_dir}/whatweb_result.txt",
+            "Analyzing web technologies with whatweb"
+        )
+        
+        # Поиск CMS
+        if os.path.exists(f"{log_dir}/whatweb_result.txt"):
+            with open(f"{log_dir}/whatweb_result.txt", 'r') as f:
+                whatweb_output = f.read().lower()
+                if 'bitrix' in whatweb_output:
+                    scans[scan_id]['cms_detected'] = 'Bitrix'
+                    await log_message(scan_id, "🎯 Detected CMS: Bitrix")
+                elif 'wordpress' in whatweb_output:
+                    scans[scan_id]['cms_detected'] = 'WordPress'
+                    await log_message(scan_id, "🎯 Detected CMS: WordPress")
+    
+    scans[scan_id]['progress'] = 60
+    scans[scan_id]['phase'] = ScanPhase.VULNERABILITY_SCAN
+    
+    await log_message(scan_id, f"✅ {ScanPhase.WEB_PROBE} phase completed")
+
+async def phase_vulnerability_scan(scan_id: str, target: str):
+    """Этап 4: Vulnerability Scan - поиск уязвимостей"""
+    await log_message(scan_id, f"🔍 Starting {ScanPhase.VULNERABILITY_SCAN} phase for {target}")
+    
+    log_dir = scans[scan_id]['log_dir']
+    cms_detected = scans[scan_id].get('cms_detected')
+    
+    # Основное сканирование с nuclei
+    if os.path.exists(f"{log_dir}/httpx_result.txt"):
+        stdout, stderr, code = await run_command(
+            scan_id,
+            f"nuclei -l {log_dir}/httpx_result.txt -o {log_dir}/nuclei_results.txt -silent",
+            "Running nuclei vulnerability scanner"
+        )
+    
+    # Специализированные проверки для Bitrix
+    if cms_detected == 'Bitrix':
+        await log_message(scan_id, "🎯 Running Bitrix-specific scans...")
+        
+        # Получаем webhook URL
+        webhook_url = await get_webhook_url()
+        if webhook_url:
+            await log_message(scan_id, f"📡 Using webhook: {webhook_url}")
+        
+        # Клонируем и запускаем check_bitrix
+        bitrix_dir = os.path.join(log_dir, 'check_bitrix')
+        stdout, stderr, code = await run_command(
+            scan_id,
+            f"cd {log_dir} && git clone https://github.com/k1rurk/check_bitrix",
+            "Cloning Bitrix vulnerability scanner"
+        )
+        
+        if os.path.exists(bitrix_dir):
+            if webhook_url:
+                cmd = f"cd {bitrix_dir} && python3 test_bitrix.py -t https://{target} scan -s {webhook_url} > {log_dir}/bitrix_scan.txt"
+            else:
+                cmd = f"cd {bitrix_dir} && python3 test_bitrix.py -t https://{target} scan > {log_dir}/bitrix_scan.txt"
+            
+            stdout, stderr, code = await run_command(
+                scan_id,
+                cmd,
+                "Running specialized Bitrix vulnerability scan"
+            )
+        
+        # Клонируем Bitrix nuclei templates
+        stdout, stderr, code = await run_command(
+            scan_id,
+            f"cd {log_dir} && git clone https://github.com/jhonnybonny/nuclei-templates-bitrix",
+            "Cloning Bitrix nuclei templates"
+        )
+        
+        bitrix_templates_dir = os.path.join(log_dir, 'nuclei-templates-bitrix')
+        if os.path.exists(bitrix_templates_dir) and os.path.exists(f"{log_dir}/httpx_result.txt"):
+            stdout, stderr, code = await run_command(
+                scan_id,
+                f"nuclei -l {log_dir}/httpx_result.txt -t {bitrix_templates_dir} -o {log_dir}/nuclei_bitrix_results.txt -silent",
+                "Running Bitrix-specific nuclei templates"
+            )
+        
+        # Фаззинг директорий с Bitrix словарем
+        stdout, stderr, code = await run_command(
+            scan_id,
+            f"cd {log_dir} && git clone https://github.com/jivoi/pentest",
+            "Cloning pentest wordlists"
+        )
+        
+        pentest_dir = os.path.join(log_dir, 'pentest')
+        wordlist_path = os.path.join(pentest_dir, 'wordlists', 'dicc.txt')
+        
+        if os.path.exists(wordlist_path):
+            stdout, stderr, code = await run_command(
+                scan_id,
+                f"dirsearch -u https://{target} -w {wordlist_path} -o {log_dir}/bitrix_fuzzing.txt --format=simple",
+                "Running Bitrix directory fuzzing"
+            )
+        
+        # Дополнительный фаззинг с ffuf
+        if os.path.exists(wordlist_path):
+            stdout, stderr, code = await run_command(
+                scan_id,
+                f"ffuf -w {wordlist_path} -u https://{target}/FUZZ -o {log_dir}/ffuf_bitrix.json -of json -s",
+                "Running ffuf fuzzing with Bitrix wordlist"
+            )
+    
+    # Специализированные проверки для WordPress
+    elif cms_detected == 'WordPress':
+        await log_message(scan_id, "🎯 Running WordPress-specific scans...")
+        
+        # WPScan (если есть API токен)
+        wp_api_token = os.getenv('WPSCAN_API_TOKEN', '')
+        if wp_api_token:
+            cmd = f"wpscan --url https://{target} --api-token {wp_api_token} --output {log_dir}/wpscan_results.txt"
+        else:
+            cmd = f"wpscan --url https://{target} --output {log_dir}/wpscan_results.txt"
+        
+        stdout, stderr, code = await run_command(
+            scan_id,
+            cmd,
+            "Running WPScan for WordPress vulnerabilities"
+        )
+    
+    # Парсинг результатов nuclei
+    await parse_nuclei_results(scan_id, log_dir)
+    
+    scans[scan_id]['progress'] = 80
+    scans[scan_id]['phase'] = ScanPhase.DEEP_ANALYSIS
+    
+    await log_message(scan_id, f"✅ {ScanPhase.VULNERABILITY_SCAN} phase completed")
+
+async def parse_nuclei_results(scan_id: str, log_dir: str):
+    """Парсинг результатов nuclei"""
+    nuclei_files = [
+        'nuclei_results.txt',
+        'nuclei_bitrix_results.txt'
+    ]
+    
+    for nuclei_file in nuclei_files:
+        file_path = os.path.join(log_dir, nuclei_file)
+        if os.path.exists(file_path):
+            try:
+                async with aiofiles.open(file_path, 'r') as f:
+                    content = await f.read()
+                    
+                lines = content.strip().split('\n')
+                for line in lines:
+                    if line.strip():
+                        # Простой парсинг nuclei результатов
+                        parts = line.split('] [')
+                        if len(parts) >= 3:
+                            severity = parts[1] if len(parts) > 1 else 'info'
+                            url = parts[-1].split(' ')[0] if parts else ''
+                            title = parts[0].replace('[', '') if parts else line
+                            
+                            vulnerability = {
+                                'title': title,
+                                'description': f'Vulnerability found by nuclei: {line}',
+                                'severity': severity,
+                                'url': url,
+                                'method': 'GET',
+                                'source': nuclei_file
+                            }
+                            
+                            scans[scan_id]['vulnerabilities'].append(vulnerability)
+                            await log_message(scan_id, f"🚨 Found vulnerability: {title} [{severity}]")
+                            
+            except Exception as e:
+                await log_message(scan_id, f"❌ Error parsing {nuclei_file}: {str(e)}")
+
+async def phase_deep_analysis(scan_id: str, target: str):
+    """Этап 5: Deep Analysis - финальный анализ и отчеты"""
+    await log_message(scan_id, f"🔍 Starting {ScanPhase.DEEP_ANALYSIS} phase for {target}")
+    
+    log_dir = scans[scan_id]['log_dir']
+    
+    # Анализ результатов фаззинга
+    fuzzing_files = ['bitrix_fuzzing.txt', 'ffuf_bitrix.json']
+    for fuzzing_file in fuzzing_files:
+        file_path = os.path.join(log_dir, fuzzing_file)
+        if os.path.exists(file_path):
+            await log_message(scan_id, f"📄 Processing fuzzing results from {fuzzing_file}")
+    
+    # Генерация HTML отчета
+    await generate_html_report(scan_id, target)
+    
+    scans[scan_id]['progress'] = 100
+    scans[scan_id]['status'] = 'completed'
+    scans[scan_id]['completed_at'] = datetime.now().isoformat()
+    
+    await log_message(scan_id, f"🎉 Scan completed successfully!")
+    await log_message(scan_id, f"📊 Total vulnerabilities found: {len(scans[scan_id]['vulnerabilities'])}")
+    await log_message(scan_id, f"📊 Total ports found: {len(scans[scan_id]['ports'])}")
+
+async def generate_html_report(scan_id: str, target: str):
+    """Генерация HTML отчета"""
+    log_dir = scans[scan_id]['log_dir']
+    report_path = os.path.join(log_dir, 'report.html')
+    
+    scan_data = scans[scan_id]
+    
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>AKUMA Scan Report - {target}</title>
+        <style>
+            body {{ font-family: Arial, sans-serif; margin: 20px; }}
+            .header {{ background: #1a1a1a; color: #00ff41; padding: 20px; }}
+            .section {{ margin: 20px 0; padding: 20px; border: 1px solid #ddd; }}
+            .vulnerability {{ background: #ffebee; padding: 10px; margin: 10px 0; }}
+            .critical {{ border-left: 5px solid #f44336; }}
+            .high {{ border-left: 5px solid #ff9800; }}
+            .medium {{ border-left: 5px solid #ffeb3b; }}
+            .low {{ border-left: 5px solid #4caf50; }}
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>AKUMA Web Scanner Report</h1>
+            <p>Target: {target}</p>
+            <p>Scan ID: {scan_id}</p>
+            <p>Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+        </div>
+        
+        <div class="section">
+            <h2>Summary</h2>
+            <p>Vulnerabilities found: {len(scan_data['vulnerabilities'])}</p>
+            <p>Open ports: {len(scan_data['ports'])}</p>
+            <p>CMS detected: {scan_data.get('cms_detected', 'None')}</p>
+        </div>
+        
+        <div class="section">
+            <h2>Vulnerabilities</h2>
+    """
+    
+    for vuln in scan_data['vulnerabilities']:
+        severity_class = vuln.get('severity', 'low')
+        html_content += f"""
+            <div class="vulnerability {severity_class}">
+                <h3>{vuln.get('title', 'Unknown')}</h3>
+                <p><strong>Severity:</strong> {vuln.get('severity', 'unknown')}</p>
+                <p><strong>URL:</strong> {vuln.get('url', 'N/A')}</p>
+                <p><strong>Description:</strong> {vuln.get('description', 'N/A')}</p>
+            </div>
+        """
+    
+    html_content += """
+        </div>
+        
+        <div class="section">
+            <h2>Open Ports</h2>
+            <ul>
+    """
+    
+    for port in scan_data['ports']:
+        html_content += f"<li>Port {port['port']}/{port['protocol']} - {port['service']}</li>"
+    
+    html_content += """
+            </ul>
+        </div>
+    </body>
+    </html>
+    """
+    
+    try:
+        async with aiofiles.open(report_path, 'w') as f:
+            await f.write(html_content)
+        await log_message(scan_id, f"📄 HTML report generated: {report_path}")
+    except Exception as e:
+        await log_message(scan_id, f"❌ Failed to generate HTML report: {str(e)}")
+
+async def perform_scan(scan_id: str, target: str):
+    """Основная функция сканирования"""
+    try:
+        await log_message(scan_id, f"🚀 Starting comprehensive scan of {target}")
+        
+        # Этап 1: Discovery
+        await phase_discovery(scan_id, target)
+        
+        # Этап 2: Port Scan
+        await phase_port_scan(scan_id, target)
+        
+        # Этап 3: Web Probe
+        await phase_web_probe(scan_id, target)
+        
+        # Этап 4: Vulnerability Scan
+        await phase_vulnerability_scan(scan_id, target)
+        
+        # Этап 5: Deep Analysis
+        await phase_deep_analysis(scan_id, target)
+        
+    except Exception as e:
+        await log_message(scan_id, f"❌ Scan failed: {str(e)}")
+        scans[scan_id]['status'] = 'failed'
+        scans[scan_id]['error'] = str(e)
+
+# API Endpoints
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+
+@app.get("/api/stats")
+async def get_stats():
+    total_scans = len(scans)
+    active_scans = len([s for s in scans.values() if s['status'] == 'running'])
+    total_vulnerabilities = sum(len(s['vulnerabilities']) for s in scans.values())
+    critical_issues = sum(len([v for v in s['vulnerabilities'] if v.get('severity') == 'critical']) for s in scans.values())
+    
+    return {
+        "totalScans": total_scans,
+        "activeScans": active_scans,
+        "vulnerabilities": total_vulnerabilities,
+        "criticalIssues": critical_issues
+    }
+
+@app.get("/api/scans")
+async def get_scans():
+    return list(scans.values())
+
+@app.get("/api/scans/{scan_id}")
+async def get_scan(scan_id: str):
+    if scan_id not in scans:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    return scans[scan_id]
+
+@app.get("/api/scans/{scan_id}/logs")
+async def get_scan_logs(scan_id: str):
+    if scan_id not in scan_logs:
+        raise HTTPException(status_code=404, detail="Logs not found")
+    return {"logs": scan_logs[scan_id]}
+
+@app.post("/api/scans")
+async def create_scan(scan_request: ScanRequest, background_tasks: BackgroundTasks):
+    scan_id = str(uuid.uuid4())
+    
+    # Создание временной директории для лога
+    log_dir = f"/tmp/akuma_scan_{scan_id}"
+    os.makedirs(log_dir, exist_ok=True)
+    
+    scan_data = {
+        "id": scan_id,
+        "target": scan_request.targets[0],
+        "targets": scan_request.targets,
+        "scan_type": "comprehensive",
+        "status": "running",
+        "progress": 0,
+        "phase": ScanPhase.DISCOVERY,
+        "created_at": datetime.now().isoformat(),
+        "config": {
+            "max_depth": 3,
+            "threads": 10,
+            "timeout": 30,
+            "rate_limit": 60
+        },
+        "vulnerabilities": [],
+        "ports": [],
+        "log_dir": log_dir
+    }
+    
+    scans[scan_id] = scan_data
+    scan_logs[scan_id] = []
+    
+    # Запускаем сканирование в фоне
+    background_tasks.add_task(perform_scan, scan_id, scan_request.targets[0])
+    
+    return {
+        "scan_id": scan_id,
+        "status": "created",
+        "message": "Scan started"
+    }
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    websocket_connections.append(websocket)
+    
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        websocket_connections.remove(websocket)
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
