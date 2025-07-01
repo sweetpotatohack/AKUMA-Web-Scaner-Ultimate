@@ -1,61 +1,77 @@
 #!/bin/bash
 
-# Цвета для вывода
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-CYAN='\033[0;36m'
-NC='\033[0m'
+echo "🔥🔥🔥 AKUMA SCANNER v3.0 - STARTING UP 🔥🔥🔥"
+echo "=============================================="
 
-echo -e "${RED}"
-echo "    ▄▄▄       ██ ▄█▀ █    ██  ███▄ ▄███▓ ▄▄▄      "
-echo "   ▒████▄     ██▄█▒  ██  ▓██▒▓██▒▀█▀ ██▒▒████▄    "
-echo "   ▒██  ▀█▄  ▓███▄░ ▓██  ▒██░▓██    ▓██░▒██  ▀█▄  "
-echo "   ░██▄▄▄▄██ ▓██ █▄ ▓▓█  ░██░▒██    ▒██ ░██▄▄▄▄██ "
-echo "    ▓█   ▓██▒▒██▒ █▄▒▒█████▓ ▒██▒   ░██▒ ▓█   ▓██▒"
-echo "    ▒▒   ▓▒█░▒ ▒▒ ▓▒░▒▓▒ ▒ ▒ ░ ▒░   ░  ░ ▒▒   ▓▒█░"
-echo "     ▒   ▒▒ ░░ ░▒ ▒░░░▒░ ░ ░ ░  ░      ░  ▒   ▒▒ ░"
-echo "     ░   ▒   ░ ░░ ░  ░░░ ░ ░ ░      ░     ░   ▒   "
-echo "         ░  ░░  ░      ░            ░         ░  ░"
-echo -e "${NC}"
-echo -e "${CYAN}🔥 AKUMA Web Scanner - Ultimate Security Testing Tool${NC}"
-echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
-echo ""
-
-# Проверяем, запущен ли уже скрипт
-if pgrep -f "python.*app.py" > /dev/null; then
-    echo -e "${YELLOW}⚠️  Backend уже запущен${NC}"
-else
-    echo -e "${GREEN}🚀 Запускаем Backend...${NC}"
-    cd backend && python3 app.py &
-    BACKEND_PID=$!
-    echo -e "${GREEN}✅ Backend запущен (PID: $BACKEND_PID)${NC}"
+# Проверяем и устанавливаем инструменты
+echo "[1/4] Checking and installing security tools..."
+if [ ! -f "./install_tools.sh" ]; then
+    echo "Error: install_tools.sh not found!"
+    exit 1
 fi
 
-if pgrep -f "npm.*start" > /dev/null; then
-    echo -e "${YELLOW}⚠️  Frontend уже запущен${NC}"
+chmod +x ./install_tools.sh
+./install_tools.sh
+
+# Запускаем backend
+echo "[2/4] Starting AKUMA Backend..."
+cd backend
+python3 -m pip install fastapi uvicorn requests pydantic
+python3 app.py &
+BACKEND_PID=$!
+echo "Backend started with PID: $BACKEND_PID"
+cd ..
+
+# Ждем запуска backend
+echo "[3/4] Waiting for backend to start..."
+sleep 5
+
+# Проверяем backend
+curl -s http://127.0.0.1:8000/health > /dev/null
+if [ $? -eq 0 ]; then
+    echo "✅ Backend is running!"
 else
-    echo -e "${GREEN}🚀 Запускаем Frontend...${NC}"
-    cd frontend && npm start &
-    FRONTEND_PID=$!
-    echo -e "${GREEN}✅ Frontend запущен (PID: $FRONTEND_PID)${NC}"
+    echo "❌ Backend failed to start!"
+    exit 1
 fi
 
-echo ""
-echo -e "${CYAN}📡 Сервисы:${NC}"
-echo -e "${GREEN}• Backend API: http://127.0.0.1:8000${NC}"
-echo -e "${GREEN}• Frontend UI: http://127.0.0.1:3000${NC}"
-echo ""
-echo -e "${YELLOW}💡 Подсказки:${NC}"
-echo -e "${BLUE}• Откройте браузер: http://127.0.0.1:3000${NC}"
-echo -e "${BLUE}• API документация: http://127.0.0.1:8000/docs${NC}"
-echo -e "${BLUE}• Для остановки: Ctrl+C или ./stop_akuma.sh${NC}"
-echo ""
-echo -e "${RED}⚡ AKUMA Scanner готов к сканированию!${NC}"
+# Запускаем frontend
+echo "[4/4] Starting AKUMA Frontend..."
+cd frontend
+npm install
+npm start &
+FRONTEND_PID=$!
+echo "Frontend started with PID: $FRONTEND_PID"
+cd ..
 
-# Ждем сигнал для остановки
-trap 'echo -e "\n${RED}🛑 Останавливаем AKUMA Scanner...${NC}"; kill $BACKEND_PID $FRONTEND_PID 2>/dev/null; exit 0' SIGINT SIGTERM
+echo ""
+echo "🎉 AKUMA SCANNER v3.0 IS READY! 🎉"
+echo "=================================="
+echo "📡 Frontend: http://localhost:3000"
+echo "🔧 Backend:  http://localhost:8000"
+echo "📊 API Docs: http://localhost:8000/docs"
+echo ""
+echo "Available Scan Types:"
+echo "• QUICK_SCAN: Fast reconnaissance + critical vulns"
+echo "• FULL_SPECTRUM: Deep penetration testing + fuzzing"
+echo ""
+echo "Press Ctrl+C to stop all services"
+echo "=================================="
 
-# Ожидаем завершения процессов
+# Функция для остановки всех процессов
+cleanup() {
+    echo ""
+    echo "🛑 Stopping AKUMA Scanner..."
+    kill $BACKEND_PID 2>/dev/null
+    kill $FRONTEND_PID 2>/dev/null
+    pkill -f "npm start" 2>/dev/null
+    pkill -f "python3 app.py" 2>/dev/null
+    echo "✅ All services stopped"
+    exit 0
+}
+
+# Устанавливаем обработчик сигнала
+trap cleanup SIGINT SIGTERM
+
+# Ждем
 wait

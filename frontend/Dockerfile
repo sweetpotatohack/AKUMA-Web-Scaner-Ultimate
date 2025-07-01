@@ -1,15 +1,18 @@
-FROM node:18-alpine as build
+FROM node:18-alpine
 
 WORKDIR /app
+
+# Копируем package.json и package-lock.json
 COPY package*.json ./
+
+# Устанавливаем зависимости
 RUN npm install
 
+# Копируем код
 COPY . .
-RUN npm run build
 
-FROM nginx:alpine
-COPY --from=build /app/build /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
+# Открываем порт
 EXPOSE 3000
-CMD ["nginx", "-g", "daemon off;"]
+
+# Запускаем в dev режиме
+CMD ["npm", "start"]

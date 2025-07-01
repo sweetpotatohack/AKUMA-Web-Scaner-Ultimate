@@ -2,69 +2,53 @@ version: '3.8'
 
 services:
   backend:
-<<<<<<< HEAD
-    image: python:3.9-slim
-=======
     build: ./backend
->>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
     container_name: akuma_backend
     ports:
       - "8000:8000"
-    environment:
-      - PYTHONUNBUFFERED=1
     volumes:
       - ./backend:/app
-      - /var/run/docker.sock:/var/run/docker.sock
-<<<<<<< HEAD
-    working_dir: /app
-    command: >
-      bash -c "apt-get update && 
-               apt-get install -y git wget curl nmap dnsutils iputils-ping build-essential ruby ruby-dev && 
-               wget -q https://go.dev/dl/go1.24.4.linux-amd64.tar.gz && 
-               tar -C /usr/local -xzf go1.24.4.linux-amd64.tar.gz && 
-               export PATH=/usr/local/go/bin:$PATH && 
-               go install github.com/projectdiscovery/httpx/cmd/httpx@latest && 
-               go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest && 
-               go install github.com/ffuf/ffuf@latest && 
-               pip install -r requirements.txt && 
-               python app.py"
-=======
->>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
-    restart: unless-stopped
+      - ./backend/data:/app/data
+    environment:
+      - PYTHONPATH=/app
+      - DATABASE_URL=sqlite:///data/scans.db
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
     networks:
       - akuma_network
+    restart: unless-stopped
 
   frontend:
-<<<<<<< HEAD
-    image: node:18-alpine
+    build: ./frontend
     container_name: akuma_frontend
     ports:
       - "3000:3000"
     volumes:
       - ./frontend:/app
-    working_dir: /app
-    command: >
-      sh -c "npm install && npm start"
-=======
-    build: ./frontend
-    container_name: akuma_frontend
-    ports:
-      - "3000:3000"
->>>>>>> 7679d51fe1c7f06685c0b2d81391ae0a6c9638b8
+      - /app/node_modules
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+      - CHOKIDAR_USEPOLLING=true
     depends_on:
       - backend
-    restart: unless-stopped
     networks:
       - akuma_network
+    restart: unless-stopped
 
   redis:
     image: redis:alpine
     container_name: akuma_redis
     ports:
       - "6379:6379"
-    restart: unless-stopped
+    volumes:
+      - redis_data:/data
     networks:
       - akuma_network
+    restart: unless-stopped
+
+volumes:
+  redis_data:
 
 networks:
   akuma_network:

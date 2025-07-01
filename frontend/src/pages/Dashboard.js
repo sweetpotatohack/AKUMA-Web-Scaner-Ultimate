@@ -5,25 +5,31 @@ const Dashboard = () => {
   const [scans, setScans] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        console.log("Fetching dashboard data...");
+        console.log("☠️ [AKUMA] Fetching intel...");
         
         const statsResponse = await fetch("http://127.0.0.1:8000/api/stats");
         const statsData = await statsResponse.json();
-        console.log("Stats:", statsData);
+        console.log("📊 [STATS]:", statsData);
         
         const scansResponse = await fetch("http://127.0.0.1:8000/api/scans");
         const scansData = await scansResponse.json();
-        console.log("Scans:", scansData);
+        console.log("🎯 [SCANS]:", scansData);
         
         setStats(statsData);
         setScans(scansData);
         setLoading(false);
       } catch (err) {
-        console.error("Dashboard error:", err);
+        console.error("💀 [ERROR]:", err);
         setError(err.message);
         setLoading(false);
       }
@@ -45,35 +51,30 @@ const Dashboard = () => {
       });
       
       if (response.ok) {
-        // Обновляем список сканов
         setScans(scans.filter(scan => scan.id !== scanId));
       }
     } catch (error) {
-      console.error("Error deleting scan:", error);
+      console.error("💀 [ERROR] Deleting scan:", error);
     }
   };
 
-  const getStatusBadge = (status) => {
-    const badges = {
-      'running': { color: '#ffeb3b', text: '🔄 Running', bg: 'rgba(255, 235, 59, 0.1)' },
-      'completed': { color: '#4caf50', text: '✅ Completed', bg: 'rgba(76, 175, 80, 0.1)' },
-      'failed': { color: '#f44336', text: '❌ Failed', bg: 'rgba(244, 67, 54, 0.1)' },
-      'paused': { color: '#ff9800', text: '⏸️ Paused', bg: 'rgba(255, 152, 0, 0.1)' }
+  const getStatusIndicator = (status) => {
+    const indicators = {
+      'running': { symbol: '▶', color: '#ffff00', text: 'RUNNING' },
+      'completed': { symbol: '✓', color: '#00ff00', text: 'COMPLETE' },
+      'failed': { symbol: '✗', color: '#ff0000', text: 'FAILED' },
+      'paused': { symbol: '⏸', color: '#ff9800', text: 'PAUSED' }
     };
     
-    const badge = badges[status] || { color: '#888', text: '❓ Unknown', bg: 'rgba(136, 136, 136, 0.1)' };
+    const indicator = indicators[status] || { symbol: '?', color: '#888', text: 'UNKNOWN' };
     
     return (
       <span style={{
-        padding: '4px 8px',
-        borderRadius: '12px',
-        fontSize: '0.8em',
-        fontWeight: 'bold',
-        color: badge.color,
-        backgroundColor: badge.bg,
-        border: `1px solid ${badge.color}`
+        color: indicator.color,
+        fontFamily: 'Courier New, monospace',
+        fontWeight: 'bold'
       }}>
-        {badge.text}
+        [{indicator.symbol}] {indicator.text}
       </span>
     );
   };
@@ -81,28 +82,55 @@ const Dashboard = () => {
   const getSeverityColor = (severity) => {
     const colors = {
       'critical': '#ff0000',
-      'high': '#ff9800', 
-      'medium': '#ffeb3b',
-      'low': '#4caf50',
-      'info': '#2196f3'
+      'high': '#ff6600', 
+      'medium': '#ffff00',
+      'low': '#00ff00',
+      'info': '#00ffff'
     };
     return colors[severity?.toLowerCase()] || '#888';
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return 'Unknown';
+  const formatTime = (dateString) => {
+    if (!dateString) return '[UNKNOWN]';
     const date = new Date(dateString);
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    return `[${date.toLocaleDateString()}] ${date.toLocaleTimeString()}`;
   };
 
   if (loading) {
-    return <div className="loading">🔄 Loading dashboard...</div>;
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '400px',
+        fontFamily: 'Courier New, monospace',
+        color: '#00ff00'
+      }}>
+        <div style={{ fontSize: '2em', marginBottom: '20px' }}>
+          ☠️ AKUMA SCANNER v3.0 ☠️
+        </div>
+        <div style={{ fontSize: '1.2em' }}>
+          [●●●] INITIALIZING SECURITY PROTOCOLS...
+        </div>
+        <div style={{ marginTop: '10px', color: '#ffff00' }}>
+          root@kali-akuma:~# loading dashboard_
+        </div>
+      </div>
+    );
   }
 
   if (error) {
     return (
-      <div className="card">
-        <h3 style={{ color: "#ff0000" }}>❌ Error: {error}</h3>
+      <div style={{
+        padding: '20px',
+        border: '2px solid #ff0000',
+        background: 'rgba(255, 0, 0, 0.1)',
+        fontFamily: 'Courier New, monospace',
+        color: '#ff0000'
+      }}>
+        <h3>💀 [FATAL ERROR] {error}</h3>
+        <p>root@kali-akuma:~# connection_lost</p>
       </div>
     );
   }
@@ -113,254 +141,242 @@ const Dashboard = () => {
   const totalVulns = scans?.reduce((total, scan) => total + (scan.vulnerabilities?.length || 0), 0) || 0;
 
   return (
-    <div>
-      <h2 style={{ marginBottom: "30px", textAlign: "center" }}>🔥 AKUMA Dashboard</h2>
+    <div style={{ 
+      fontFamily: 'Courier New, monospace',
+      background: '#0a0a0a',
+      color: '#00ff00',
+      minHeight: '100vh',
+      padding: '20px'
+    }}>
       
-      {/* Statistics */}
-      <div className="grid">
-        <div className="stat-card">
-          <div className="stat-number">{scans?.length || 0}</div>
-          <div className="stat-label">Total Scans</div>
-        </div>
-        <div className="stat-card">
-import React from 'react';
-import { useApi, usePolling } from '../hooks/useApi';
-import { api } from '../services/api';
-
-const Dashboard = () => {
-  const { data: stats, loading: statsLoading } = usePolling(() => api.getStats(), 5000);
-  const { data: scans, loading: scansLoading } = usePolling(() => api.getScans(), 10000);
-
-  if (statsLoading && scansLoading) {
-    return <div className="loading">Loading dashboard data</div>;
-  }
-
-  const recentScans = scans?.slice(0, 5) || [];
-  const runningScans = scans?.filter(scan => scan.status === 'running') || [];
-
-  return (
-    <div>
-      <h2 style={{ marginBottom: '30px', textAlign: 'center' }}>Security Dashboard</h2>
-      
-      {/* Statistics Grid */}
-      <div className="grid">
-        <div className="stat-card">
-          <div className="stat-number">{stats?.total_scans || 0}</div>
-          <div className="stat-label">Total Scans</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-number">{stats?.vulnerabilities_found || 0}</div>
-          <div className="stat-label">Vulnerabilities Found</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-number">{runningScans.length}</div>
-          <div className="stat-label">Active Scans</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-number">{totalPorts}</div>
-          <div className="stat-label">Open Ports</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-number">{totalVulns}</div>
-          <div className="stat-label">Vulnerabilities</div>
+      {/* Terminal Header */}
+      <div style={{
+        border: '2px solid #00ff00',
+        padding: '15px',
+        marginBottom: '20px',
+        background: '#000000'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h1 style={{ margin: 0, color: '#00ff00' }}>
+              ☠️ AKUMA SECURITY DASHBOARD ☠️
+            </h1>
+            <p style={{ margin: '5px 0 0 0', color: '#ffff00' }}>
+              root@kali-akuma:~# akuma --status --verbose
+            </p>
+          </div>
+          <div style={{ textAlign: 'right', color: '#00ffff' }}>
+            <div>[{currentTime.toLocaleDateString()}]</div>
+            <div>[{currentTime.toLocaleTimeString()}]</div>
+          </div>
         </div>
       </div>
 
-      {/* Active Scans */}
-      {runningScans.length > 0 && (
-        <div className="card">
-          <h3>🔄 Active Scans</h3>
-          {runningScans.map(scan => (
-            <div key={scan.id} style={{ 
-              padding: "15px", 
-              margin: "10px 0", 
-              background: "rgba(255, 235, 59, 0.1)", 
-              borderRadius: "8px",
-              border: "1px solid #ffeb3b"
+      {/* System Stats Terminal */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gap: '15px',
+        marginBottom: '20px'
+      }}>
+        {[
+          { label: 'TOTAL_SCANS', value: scans?.length || 0, color: '#00ff00' },
+          { label: 'TARGETS_HIT', value: stats?.targets_scanned || 0, color: '#00ffff' },
+          { label: 'ACTIVE_RAIDS', value: runningScans.length, color: '#ffff00' },
+          { label: 'OPEN_PORTS', value: totalPorts, color: '#ff9800' },
+          { label: 'VULNS_FOUND', value: totalVulns, color: '#ff0000' }
+        ].map((stat, index) => (
+          <div key={index} style={{
+            border: `1px solid ${stat.color}`,
+            padding: '15px',
+            background: 'rgba(0, 0, 0, 0.8)',
+            textAlign: 'center'
+          }}>
+            <div style={{ color: '#888', fontSize: '0.8em' }}>[{stat.label}]</div>
+            <div style={{ 
+              fontSize: '2em', 
+              fontWeight: 'bold',
+              color: stat.color,
+              textShadow: `0 0 10px ${stat.color}`
             }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              {stat.value}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Active Operations */}
+      {runningScans.length > 0 && (
+        <div style={{
+          border: '2px solid #ffff00',
+          padding: '15px',
+          marginBottom: '20px',
+          background: 'rgba(255, 255, 0, 0.05)'
+        }}>
+          <h3 style={{ color: '#ffff00', marginBottom: '15px' }}>
+            ⚡ [ACTIVE OPERATIONS] ⚡
+          </h3>
+          {runningScans.map(scan => (
+            <div key={scan.id} style={{
+              border: '1px solid #ffff00',
+              padding: '10px',
+              margin: '10px 0',
+              background: 'rgba(0, 0, 0, 0.5)'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <div>
-                  <strong style={{ fontSize: "1.1em" }}>{scan.target}</strong>
-                  <div style={{ fontSize: "0.9em", color: "#ccc", marginTop: "5px" }}>
-                    Phase: {scan.phase} • Progress: {scan.progress}%
-                  </div>
+                  <span style={{ color: '#00ff00' }}>TARGET:</span> {scan.target}
+                  <br />
+                  <span style={{ color: '#00ffff' }}>PHASE:</span> {scan.phase || 'RECON'} 
+                  <span style={{ color: '#ffff00', marginLeft: '20px' }}>
+                    PROGRESS: {scan.progress || 0}%
+                  </span>
                 </div>
-                <div>
-                  {getStatusBadge(scan.status)}
-                </div>
+                <div>{getStatusIndicator(scan.status)}</div>
               </div>
-              <div style={{ 
-                background: "rgba(0,0,0,0.3)", 
-                borderRadius: "10px", 
-                height: "8px", 
-                marginTop: "10px",
-                overflow: "hidden"
+              
+              {/* Progress Bar */}
+              <div style={{
+                width: '100%',
+                height: '4px',
+                background: '#333',
+                marginTop: '10px',
+                position: 'relative'
               }}>
                 <div style={{
-                  background: "linear-gradient(90deg, #4caf50, #ffeb3b, #ff9800)",
-                  height: "100%",
-                  width: `${scan.progress}%`,
-                  transition: "width 0.3s ease"
+                  width: `${scan.progress || 0}%`,
+                  height: '100%',
+                  background: 'linear-gradient(90deg, #00ff00, #ffff00, #ff0000)',
+                  transition: 'width 0.3s ease'
                 }}></div>
-              </div>
-          <div className="stat-number">{stats?.targets_scanned || 0}</div>
-          <div className="stat-label">Targets Scanned</div>
-        </div>
-      </div>
-
-      {/* Running Scans */}
-      {runningScans.length > 0 && (
-        <div className="card">
-          <h3 style={{ marginBottom: '20px' }}>🔄 Active Scans</h3>
-          {runningScans.map(scan => (
-            <div key={scan.id} style={{ marginBottom: '15px', padding: '15px', background: 'rgba(255, 255, 0, 0.1)', borderRadius: '5px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <strong>{scan.name}</strong>
-                  <div style={{ fontSize: '0.9em', color: '#00cccc' }}>{scan.target}</div>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ color: '#ffff00' }}>Running...</div>
-                  <div style={{ fontSize: '0.9em' }}>Started: {new Date(scan.created_at).toLocaleString()}</div>
-                </div>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* Recent Scans */}
-      <div className="card">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-          <h3>📊 Recent Scan Operations</h3>
-          <span style={{ color: "#888", fontSize: "0.9em" }}>
-            Total: {scans?.length || 0} scans
+      {/* Scan History Terminal */}
+      <div style={{
+        border: '2px solid #00ff00',
+        padding: '15px',
+        background: 'rgba(0, 0, 0, 0.8)'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
+          <h3 style={{ color: '#00ff00', margin: 0 }}>
+            📊 [SCAN_HISTORY.LOG] 📊
+          </h3>
+          <span style={{ color: '#888' }}>
+            [{scans?.length || 0}] ENTRIES FOUND
           </span>
         </div>
         
         {scans && scans.length > 0 ? (
-          <div style={{ display: "grid", gap: "15px" }}>
+          <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
             {scans.slice(0, 10).map(scan => (
-              <div key={scan.id} style={{ 
-                padding: "15px", 
-                background: "rgba(0, 0, 0, 0.3)", 
-                borderRadius: "8px",
-                border: `2px solid ${scan.status === "completed" ? "#4caf50" : scan.status === "running" ? "#ffeb3b" : "#f44336"}`,
-                transition: "all 0.3s ease"
+              <div key={scan.id} style={{
+                border: '1px solid #333',
+                padding: '12px',
+                margin: '8px 0',
+                background: 'rgba(0, 0, 0, 0.6)',
+                transition: 'all 0.3s ease'
               }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div style={{ flex: 1 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-                      <strong style={{ fontSize: "1.1em", color: "#00ff00" }}>
-                        🎯 {scan.target}
-                      </strong>
-                      {getStatusBadge(scan.status)}
+                    <div style={{ marginBottom: '8px' }}>
+                      <span style={{ color: '#00ff00' }}>┌─[TARGET]:</span> 
+                      <span style={{ color: '#00ffff', marginLeft: '10px' }}>{scan.target}</span>
+                      <span style={{ marginLeft: '20px' }}>{getStatusIndicator(scan.status)}</span>
                     </div>
                     
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: "10px", fontSize: "0.9em", color: "#ccc" }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px', fontSize: '0.9em' }}>
                       <div>
-                        <span style={{ color: "#888" }}>📅 Created:</span><br/>
-                        {formatDate(scan.created_at)}
+                        <span style={{ color: '#888' }}>├─[TIMESTAMP]:</span><br/>
+                        <span style={{ color: '#ffff00' }}>{formatTime(scan.created_at)}</span>
                       </div>
                       <div>
-                        <span style={{ color: "#888" }}>🔌 Ports:</span><br/>
-                        <span style={{ color: "#4caf50", fontWeight: "bold" }}>{scan.ports?.length || 0}</span>
+                        <span style={{ color: '#888' }}>├─[PORTS_OPEN]:</span><br/>
+                        <span style={{ color: '#00ff00' }}>[{scan.ports?.length || 0}]</span>
                       </div>
                       <div>
-                        <span style={{ color: "#888" }}>⚠️ Vulnerabilities:</span><br/>
-                        <span style={{ 
-                          color: scan.vulnerabilities?.length > 0 ? "#ff9800" : "#4caf50", 
-                          fontWeight: "bold" 
-                        }}>
-                          {scan.vulnerabilities?.length || 0}
+                        <span style={{ color: '#888' }}>├─[VULNS_FOUND]:</span><br/>
+                        <span style={{ color: scan.vulnerabilities?.length > 0 ? '#ff6600' : '#00ff00' }}>
+                          [{scan.vulnerabilities?.length || 0}]
                         </span>
                       </div>
                       <div>
-                        <span style={{ color: "#888" }}>🔧 Type:</span><br/>
-                        {scan.scan_type || 'comprehensive'}
+                        <span style={{ color: '#888' }}>└─[SCAN_TYPE]:</span><br/>
+                        <span style={{ color: '#00ffff' }}>{scan.scan_type || 'FULL'}</span>
                       </div>
                     </div>
 
-                    {/* Vulnerabilities summary */}
+                    {/* Vulnerability Breakdown */}
                     {scan.vulnerabilities && scan.vulnerabilities.length > 0 && (
-                      <div style={{ marginTop: "10px" }}>
-                        <span style={{ color: "#888", fontSize: "0.8em" }}>Severity breakdown: </span>
+                      <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid #333' }}>
+                        <span style={{ color: '#888', fontSize: '0.8em' }}>THREAT_LEVEL: </span>
                         {['critical', 'high', 'medium', 'low'].map(severity => {
                           const count = scan.vulnerabilities.filter(v => v.severity?.toLowerCase() === severity).length;
                           return count > 0 ? (
                             <span key={severity} style={{ 
                               color: getSeverityColor(severity), 
-                              fontSize: "0.8em", 
-                              marginRight: "8px",
-                              fontWeight: "bold"
+                              fontSize: '0.8em', 
+                              marginRight: '12px',
+                              fontWeight: 'bold'
                             }}>
-                              {severity}: {count}
+                              [{severity.toUpperCase()}:{count}]
                             </span>
                           ) : null;
                         })}
                       </div>
                     )}
-
-                    {/* Progress bar for running scans */}
-                    {scan.status === "running" && (
-                      <div style={{ marginTop: "10px" }}>
-                        <div style={{ fontSize: "0.8em", color: "#888", marginBottom: "5px" }}>
-                          {scan.phase} • {scan.progress}%
-                        </div>
-                        <div style={{ 
-                          background: "rgba(0,0,0,0.5)", 
-                          borderRadius: "10px", 
-                          height: "6px",
-                          overflow: "hidden"
-                        }}>
-                          <div style={{
-                            background: "linear-gradient(90deg, #4caf50, #ffeb3b, #ff9800)",
-                            height: "100%",
-                            width: `${scan.progress}%`,
-                            transition: "width 0.3s ease"
-                          }}></div>
-                        </div>
-                      </div>
-                    )}
                   </div>
                   
-                  <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginLeft: "15px" }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', marginLeft: '15px' }}>
                     <button 
                       onClick={() => handleViewResult(scan.id)}
                       style={{
-                        padding: "8px 16px",
-                        background: "linear-gradient(45deg, #4caf50, #45a049)",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "6px",
-                        cursor: "pointer",
-                        fontSize: "0.9em",
-                        fontWeight: "bold",
-                        transition: "all 0.3s ease"
+                        padding: '6px 12px',
+                        background: 'linear-gradient(45deg, #004400, #006600)',
+                        color: '#00ff00',
+                        border: '1px solid #00ff00',
+                        cursor: 'pointer',
+                        fontSize: '0.8em',
+                        fontFamily: 'Courier New, monospace',
+                        transition: 'all 0.3s ease'
                       }}
-                      onMouseOver={(e) => e.target.style.transform = "scale(1.05)"}
-                      onMouseOut={(e) => e.target.style.transform = "scale(1)"}
+                      onMouseOver={(e) => {
+                        e.target.style.background = 'linear-gradient(45deg, #006600, #008800)';
+                        e.target.style.boxShadow = '0 0 10px #00ff00';
+                      }}
+                      onMouseOut={(e) => {
+                        e.target.style.background = 'linear-gradient(45deg, #004400, #006600)';
+                        e.target.style.boxShadow = 'none';
+                      }}
                     >
-                      👁️ View Results
+                      [VIEW_INTEL]
                     </button>
                     
                     <button 
                       onClick={() => handleDeleteScan(scan.id)}
                       style={{
-                        padding: "8px 16px",
-                        background: "linear-gradient(45deg, #f44336, #d32f2f)",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "6px",
-                        cursor: "pointer",
-                        fontSize: "0.9em",
-                        fontWeight: "bold",
-                        transition: "all 0.3s ease"
+                        padding: '6px 12px',
+                        background: 'linear-gradient(45deg, #440000, #660000)',
+                        color: '#ff0000',
+                        border: '1px solid #ff0000',
+                        cursor: 'pointer',
+                        fontSize: '0.8em',
+                        fontFamily: 'Courier New, monospace',
+                        transition: 'all 0.3s ease'
                       }}
-                      onMouseOver={(e) => e.target.style.transform = "scale(1.05)"}
-                      onMouseOut={(e) => e.target.style.transform = "scale(1)"}
+                      onMouseOver={(e) => {
+                        e.target.style.background = 'linear-gradient(45deg, #660000, #880000)';
+                        e.target.style.boxShadow = '0 0 10px #ff0000';
+                      }}
+                      onMouseOut={(e) => {
+                        e.target.style.background = 'linear-gradient(45deg, #440000, #660000)';
+                        e.target.style.boxShadow = 'none';
+                      }}
                     >
-                      🗑️ Delete
+                      [PURGE]
                     </button>
                   </div>
                 </div>
@@ -368,90 +384,39 @@ const Dashboard = () => {
             ))}
           </div>
         ) : (
-          <div style={{ 
-            textAlign: "center", 
-            padding: "40px", 
-            color: "#888",
-            background: "rgba(0,0,0,0.2)",
-            borderRadius: "8px",
-            border: "2px dashed #444"
+          <div style={{
+            textAlign: 'center',
+            padding: '40px',
+            color: '#888',
+            border: '2px dashed #333',
+            background: 'rgba(0, 0, 0, 0.3)'
           }}>
-            <div style={{ fontSize: "3em", marginBottom: "10px" }}>🔍</div>
-            <p>No scans found</p>
-            <p style={{ fontSize: "0.9em" }}>Start your first scan to see results here</p>
+            <div style={{ fontSize: '2em', marginBottom: '10px' }}>💀</div>
+            <p>NO SCAN DATA FOUND</p>
+            <p style={{ fontSize: '0.9em' }}>root@kali-akuma:~# initiate_first_scan</p>
           </div>
-        )}
-      </div>
-        <h3 style={{ marginBottom: '20px' }}>📊 Recent Scans</h3>
-        {recentScans.length === 0 ? (
-          <p style={{ color: '#888', textAlign: 'center', padding: '20px' }}>
-            No scans found. Create your first scan to get started!
-          </p>
-        ) : (
-          recentScans.map(scan => (
-            <div key={scan.id} style={{ 
-              marginBottom: '15px', 
-              padding: '15px', 
-              background: 'rgba(0, 0, 0, 0.3)', 
-              borderRadius: '5px',
-              borderLeft: `4px solid ${getStatusColor(scan.status)}`
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <strong>{scan.name}</strong>
-                  <div style={{ fontSize: '0.9em', color: '#00cccc' }}>{scan.target}</div>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <span className={`status-indicator status-${scan.status}`}></span>
-                  <span style={{ color: getStatusColor(scan.status) }}>
-                    {scan.status.toUpperCase()}
-                  </span>
-                  <div style={{ fontSize: '0.9em', marginTop: '5px' }}>
-                    {new Date(scan.created_at).toLocaleString()}
-                  </div>
-                </div>
-              </div>
-              {scan.vulnerabilities_count > 0 && (
-                <div style={{ marginTop: '10px', fontSize: '0.9em' }}>
-                  <span style={{ color: '#ff6600' }}>
-                    ⚠️ {scan.vulnerabilities_count} vulnerabilities found
-                  </span>
-                </div>
-              )}
-            </div>
-          ))
         )}
       </div>
 
-      {/* System Status */}
-      <div className="card">
-        <h3 style={{ marginBottom: '20px' }}>🖥️ System Status</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-          <div>
-            <div style={{ color: '#00cccc' }}>Backend Status</div>
-            <div style={{ color: '#00ff00' }}>🟢 Online</div>
-          </div>
-          <div>
-            <div style={{ color: '#00cccc' }}>Scanner Engine</div>
-            <div style={{ color: '#00ff00' }}>🟢 Ready</div>
-          </div>
-          <div>
-            <div style={{ color: '#00cccc' }}>Database</div>
-            <div style={{ color: '#00ff00' }}>🟢 Connected</div>
-          </div>
+      {/* System Status Footer */}
+      <div style={{
+        marginTop: '20px',
+        padding: '10px',
+        border: '1px solid #333',
+        background: 'rgba(0, 0, 0, 0.5)',
+        display: 'flex',
+        justifyContent: 'space-between',
+        fontSize: '0.8em'
+      }}>
+        <div style={{ color: '#00ff00' }}>
+          [AKUMA_ENGINE]: ONLINE | [DATABASE]: CONNECTED | [NETWORK]: ACTIVE
+        </div>
+        <div style={{ color: '#ffff00' }}>
+          root@kali-akuma:~# _
         </div>
       </div>
     </div>
   );
-};
-
-const getStatusColor = (status) => {
-  switch (status) {
-    case 'running': return '#ffff00';
-    case 'completed': return '#00ff00';
-    case 'failed': return '#ff0000';
-    default: return '#888';
-  }
 };
 
 export default Dashboard;

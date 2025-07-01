@@ -2,7 +2,9 @@ import { API_BASE_URL } from '../config/api.js';
 
 const handleResponse = async (response) => {
   if (!response.ok) {
-    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    const errorText = await response.text();
+    console.error('API Error Response:', errorText);
+    throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
   }
   return response.json();
 };
@@ -10,6 +12,9 @@ const handleResponse = async (response) => {
 const fetchWithErrorHandling = async (url, options = {}) => {
   try {
     console.log(`🌐 API Call: ${url}`);
+    if (options.body) {
+      console.log('📤 Request Body:', options.body);
+    }
     const response = await fetch(url, options);
     return await handleResponse(response);
   } catch (error) {
@@ -17,14 +22,11 @@ const fetchWithErrorHandling = async (url, options = {}) => {
     throw error;
   }
 };
-const API_BASE = 'http://localhost:8000';
 
 export const api = {
   // Health check
   async health() {
     return fetchWithErrorHandling(`${API_BASE_URL}/health`);
-    const response = await fetch(`${API_BASE}/health`);
-    return response.json();
   },
 
   // Scans
@@ -33,18 +35,25 @@ export const api = {
   },
 
   async createScan(data) {
-    return fetchWithErrorHandling(`${API_BASE_URL}/api/scans`, {
-    const response = await fetch(`${API_BASE}/scans`);
-    return response.json();
-  },
+    // Преобразуем данные frontend в формат backend
+    const targets = data.target.split('\n').map(t => t.trim()).filter(t => t);
+    const scanTypes = [data.scan_type || 'comprehensive'];
+    const description = data.name || 'AKUMA Scan';
 
-  async createScan(data) {
-    const response = await fetch(`${API_BASE}/scans`, {
+    const backendData = {
+      targets: targets,
+      scanTypes: scanTypes,
+      description: description
+    };
+
+    console.log('🎯 Sending scan request:', backendData);
+
+    return fetchWithErrorHandling(`${API_BASE_URL}/api/scans`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify(backendData),
     });
   },
 
@@ -66,22 +75,10 @@ export const api = {
 
   async getScanResults(scanId) {
     return fetchWithErrorHandling(`${API_BASE_URL}/api/scans/${scanId}`);
-    return response.json();
-  },
-
-  async getScan(scanId) {
-    const response = await fetch(`${API_BASE}/scans/${scanId}`);
-    return response.json();
   },
 
   async getScanProgress(scanId) {
-    const response = await fetch(`${API_BASE}/scans/${scanId}/progress`);
-    return response.json();
-  },
-
-  async getScanResults(scanId) {
-    const response = await fetch(`${API_BASE}/scans/${scanId}/results`);
-    return response.json();
+    return fetchWithErrorHandling(`${API_BASE_URL}/api/scans/${scanId}/progress`);
   },
 
   // Statistics
@@ -92,19 +89,16 @@ export const api = {
   // Vulnerabilities
   async getVulnerabilities() {
     return fetchWithErrorHandling(`${API_BASE_URL}/api/vulnerabilities`);
-    const response = await fetch(`${API_BASE}/stats`);
-    return response.json();
   },
 
   // Targets
   async uploadTargets(file) {
     const formData = new FormData();
     formData.append('file', file);
-    const response = await fetch(`${API_BASE}/upload-targets`, {
+    return fetchWithErrorHandling(`${API_BASE_URL}/api/upload-targets`, {
       method: 'POST',
       body: formData,
     });
-    return response.json();
   },
 
   // Reports
@@ -121,7 +115,6 @@ export const api = {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
     
-    const response = await fetch(`${API_BASE}/scans/${scanId}/report?format=${format}`);
     if (format === 'html') {
       return response.text();
     }
@@ -133,37 +126,34 @@ export const api = {
     return fetchWithErrorHandling(`${API_BASE_URL}/api/scans/${scanId}`, {
       method: 'DELETE',
     });
-  }
-};
+  },
 
-// Экспортируем также для отладки
-window.AKUMA_API = api;
-window.AKUMA_API_BASE = API_BASE_URL;
   // Notifications
   async getNotificationSettings() {
-    const response = await fetch(`${API_BASE}/notifications/settings`);
-    return response.json();
+    return fetchWithErrorHandling(`${API_BASE_URL}/api/notifications/settings`);
   },
 
   async updateNotificationSettings(settings) {
-    const response = await fetch(`${API_BASE}/notifications/settings`, {
+    return fetchWithErrorHandling(`${API_BASE_URL}/api/notifications/settings`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(settings),
     });
-    return response.json();
   },
 
   async testNotification(type) {
-    const response = await fetch(`${API_BASE}/notifications/test`, {
+    return fetchWithErrorHandling(`${API_BASE_URL}/api/notifications/test`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ type }),
     });
-    return response.json();
   }
 };
+
+// Экспортируем также для отладки
+window.AKUMA_API = api;
+window.AKUMA_API_BASE = API_BASE_URL;
