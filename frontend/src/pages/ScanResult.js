@@ -25,25 +25,23 @@ const ScanResult = () => {
         const scanData = await scanResponse.json();
         setScan(scanData);
 
-        // Получаем порты
-        const portsResponse = await fetch(`http://127.0.0.1:8000/api/scans/${scanId}/ports`);
-        const portsData = await portsResponse.json();
-        setPorts(portsData);
+        // Безопасно устанавливаем порты
+        setPorts(Array.isArray(scanData.ports) ? scanData.ports : []);
 
-        // Получаем уязвимости
-        const vulnResponse = await fetch(`http://127.0.0.1:8000/api/scans/${scanId}/vulnerabilities`);
-        const vulnData = await vulnResponse.json();
-        setVulnerabilities(vulnData);
+        // Безопасно устанавливаем уязвимости
+        setVulnerabilities(Array.isArray(scanData.vulnerabilities) ? scanData.vulnerabilities : []);
 
         // Получаем логи
-        const logsResponse = await fetch(`http://127.0.0.1:8000/api/scans/${scanId}/logs`);
-        const logsData = await logsResponse.json();
-        setLogs(logsData);
-
-        // Получаем результаты фаззинга
-        const fuzzingResponse = await fetch(`http://127.0.0.1:8000/api/scans/${scanId}/fuzzing`);
-        const fuzzingData = await fuzzingResponse.json();
-        setFuzzing(fuzzingData);
+        try {
+          const logsResponse = await fetch(`http://127.0.0.1:8000/api/scans/${scanId}/logs`);
+          if (logsResponse.ok) {
+            const logsData = await logsResponse.json();
+            setLogs(Array.isArray(logsData) ? logsData : []);
+          }
+        } catch (logError) {
+          console.warn("Failed to fetch logs:", logError);
+          setLogs([]);
+        }
 
         setLoading(false);
       } catch (err) {
@@ -112,6 +110,11 @@ const ScanResult = () => {
     marginRight: '5px'
   });
 
+  // Безопасные функции для работы с массивами
+  const safeVulnerabilities = Array.isArray(vulnerabilities) ? vulnerabilities : [];
+  const safePorts = Array.isArray(ports) ? ports : [];
+  const safeLogs = Array.isArray(logs) ? logs : [];
+
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '50px' }}>
@@ -160,7 +163,7 @@ const ScanResult = () => {
         {scan?.status === 'running' && (
           <div style={{ marginTop: '15px' }}>
             <div style={{ fontSize: '0.9em', color: '#888', marginBottom: '5px' }}>
-              Current Phase: {scan.phase} • Progress: {scan.progress}%
+              Current Phase: {scan.phase || 'Unknown'} • Progress: {scan.progress || 0}%
             </div>
             <div style={{ 
               background: 'rgba(0,0,0,0.5)', 
@@ -171,7 +174,7 @@ const ScanResult = () => {
               <div style={{
                 background: 'linear-gradient(90deg, #4caf50, #ffeb3b, #ff9800)',
                 height: '100%',
-                width: `${scan.progress}%`,
+                width: `${scan.progress || 0}%`,
                 transition: 'width 0.3s ease'
               }}></div>
             </div>
@@ -191,31 +194,19 @@ const ScanResult = () => {
           style={tabStyle(activeTab === 'vulnerabilities')}
           onClick={() => setActiveTab('vulnerabilities')}
         >
-          🛡️ Vulnerabilities ({vulnerabilities.length})
+          🛡️ Vulnerabilities ({safeVulnerabilities.length})
         </button>
         <button 
           style={tabStyle(activeTab === 'ports')}
           onClick={() => setActiveTab('ports')}
         >
-          🔌 Ports ({ports.length})
-        </button>
-        <button 
-          style={tabStyle(activeTab === 'fuzzing')}
-          onClick={() => setActiveTab('fuzzing')}
-        >
-          🔍 Fuzzing Dir
-        </button>
-        <button 
-          style={tabStyle(activeTab === 'scanner')}
-          onClick={() => setActiveTab('scanner')}
-        >
-          🎯 Scanner Results
+          🔌 Ports ({safePorts.length})
         </button>
         <button 
           style={tabStyle(activeTab === 'logs')}
           onClick={() => setActiveTab('logs')}
         >
-          📋 Logs ({logs.length})
+          📋 Logs ({safeLogs.length})
         </button>
       </div>
 
@@ -226,15 +217,15 @@ const ScanResult = () => {
             <h3>📊 Scan Overview</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '30px' }}>
               <div className="stat-card">
-                <div className="stat-number">{vulnerabilities.length}</div>
+                <div className="stat-number">{safeVulnerabilities.length}</div>
                 <div className="stat-label">Vulnerabilities</div>
               </div>
               <div className="stat-card">
-                <div className="stat-number">{ports.length}</div>
+                <div className="stat-number">{safePorts.length}</div>
                 <div className="stat-label">Open Ports</div>
               </div>
               <div className="stat-card">
-                <div className="stat-number">{scan?.scan_type || 'comprehensive'}</div>
+                <div className="stat-number">{scan?.scan_type || 'akuma_full'}</div>
                 <div className="stat-label">Scan Type</div>
               </div>
               <div className="stat-card">
@@ -247,7 +238,7 @@ const ScanResult = () => {
             <h4>🛡️ Vulnerability Breakdown</h4>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '10px', marginBottom: '20px' }}>
               {['critical', 'high', 'medium', 'low', 'info'].map(severity => {
-                const count = vulnerabilities.filter(v => v.severity?.toLowerCase() === severity).length;
+                const count = safeVulnerabilities.filter(v => v.severity?.toLowerCase() === severity).length;
                 return (
                   <div key={severity} style={{
                     padding: '10px',
@@ -266,7 +257,7 @@ const ScanResult = () => {
             {/* Quick Port Overview */}
             <h4>🔌 Top Open Ports</h4>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' }}>
-              {ports.slice(0, 6).map((port, index) => (
+              {safePorts.slice(0, 6).map((port, index) => (
                 <div key={index} style={{
                   padding: '10px',
                   background: 'rgba(0,255,0,0.1)',
@@ -285,9 +276,9 @@ const ScanResult = () => {
         {activeTab === 'vulnerabilities' && (
           <div>
             <h3>🛡️ Vulnerabilities Found</h3>
-            {vulnerabilities.length > 0 ? (
+            {safeVulnerabilities.length > 0 ? (
               <div style={{ display: 'grid', gap: '15px' }}>
-                {vulnerabilities.map((vuln, index) => (
+                {safeVulnerabilities.map((vuln, index) => (
                   <div key={index} style={{
                     padding: '15px',
                     background: 'rgba(0,0,0,0.3)',
@@ -308,11 +299,6 @@ const ScanResult = () => {
                         <p style={{ margin: '5px 0', fontSize: '0.9em', color: '#ccc' }}>
                           {vuln.description || 'No description available'}
                         </p>
-                        {vuln.extra_info && (
-                          <p style={{ margin: '5px 0', fontSize: '0.8em', color: '#888' }}>
-                            <strong>Details:</strong> {vuln.extra_info}
-                          </p>
-                        )}
                       </div>
                       <div style={{
                         padding: '5px 10px',
@@ -341,9 +327,9 @@ const ScanResult = () => {
         {activeTab === 'ports' && (
           <div>
             <h3>🔌 Open Ports & Services</h3>
-            {ports.length > 0 ? (
+            {safePorts.length > 0 ? (
               <div style={{ display: 'grid', gap: '10px' }}>
-                {ports.map((port, index) => (
+                {safePorts.map((port, index) => (
                   <div key={index} style={{
                     padding: '15px',
                     background: 'rgba(0,255,0,0.1)',
@@ -388,51 +374,16 @@ const ScanResult = () => {
           </div>
         )}
 
-        {activeTab === 'fuzzing' && (
-          <div>
-            <h3>🔍 Directory Fuzzing Results</h3>
-            <pre style={{ 
-              background: 'rgba(0,0,0,0.5)', 
-              padding: '20px', 
-              borderRadius: '8px', 
-              overflow: 'auto',
-              maxHeight: '500px',
-              fontSize: '0.9em'
-            }}>
-              {Object.keys(fuzzing).length > 0 ? JSON.stringify(fuzzing, null, 2) : 'No fuzzing results available'}
-            </pre>
-          </div>
-        )}
-
-        {activeTab === 'scanner' && (
-          <div>
-            <h3>🎯 Specialized Scanner Results</h3>
-            <div style={{ fontSize: '0.9em', color: '#888', marginBottom: '15px' }}>
-              Results from specialized scanners (Bitrix scanner, WPScan, etc.)
-            </div>
-            <pre style={{ 
-              background: 'rgba(0,0,0,0.5)', 
-              padding: '20px', 
-              borderRadius: '8px', 
-              overflow: 'auto',
-              maxHeight: '500px',
-              fontSize: '0.9em'
-            }}>
-              {scan?.cms_detected ? `CMS Detected: ${scan.cms_detected}` : 'No specialized scanner results available'}
-            </pre>
-          </div>
-        )}
-
         {activeTab === 'logs' && (
           <div>
-            <h3>📋 Scan Logs</h3>
+            <h3>📋 AKUMA Scan Logs</h3>
             <div style={{
               background: 'rgba(0,0,0,0.5)',
               borderRadius: '8px',
               maxHeight: '600px',
               overflow: 'auto'
             }}>
-              {logs.length > 0 ? logs.map((log, index) => (
+              {safeLogs.length > 0 ? safeLogs.map((log, index) => (
                 <div key={index} style={{
                   padding: '8px 15px',
                   borderBottom: '1px solid rgba(255,255,255,0.1)',
@@ -446,7 +397,7 @@ const ScanResult = () => {
                 </div>
               )) : (
                 <div style={{ padding: '20px', textAlign: 'center', color: '#888' }}>
-                  No logs available
+                  No logs available yet. Check back when scan is running.
                 </div>
               )}
             </div>

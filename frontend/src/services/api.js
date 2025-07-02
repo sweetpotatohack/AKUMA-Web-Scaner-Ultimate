@@ -35,25 +35,21 @@ export const api = {
   },
 
   async createScan(data) {
-    // Преобразуем данные frontend в формат backend
-    const targets = data.target.split('\n').map(t => t.trim()).filter(t => t);
-    const scanTypes = [data.scan_type || 'comprehensive'];
-    const description = data.name || 'AKUMA Scan';
-
-    const backendData = {
-      targets: targets,
-      scanTypes: scanTypes,
-      description: description
+    // Для AKUMA сканера используем простой формат
+    const target = data.target.split('\n')[0].trim(); // Берём первую цель
+    
+    const akumaData = {
+      target: target
     };
 
-    console.log('🎯 Sending scan request:', backendData);
+    console.log('🎯 Sending AKUMA scan request:', akumaData);
 
-    return fetchWithErrorHandling(`${API_BASE_URL}/api/scans`, {
+    return fetchWithErrorHandling(`${API_BASE_URL}/api/akuma-scan`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(backendData),
+      body: JSON.stringify(akumaData),
     });
   },
 
@@ -65,91 +61,15 @@ export const api = {
     return fetchWithErrorHandling(`${API_BASE_URL}/api/scans/${scanId}/logs`);
   },
 
-  async getScanPorts(scanId) {
-    return fetchWithErrorHandling(`${API_BASE_URL}/api/scans/${scanId}/ports`);
-  },
-
-  async getScanVulnerabilities(scanId) {
-    return fetchWithErrorHandling(`${API_BASE_URL}/api/scans/${scanId}/vulnerabilities`);
-  },
-
-  async getScanResults(scanId) {
-    return fetchWithErrorHandling(`${API_BASE_URL}/api/scans/${scanId}`);
-  },
-
-  async getScanProgress(scanId) {
-    return fetchWithErrorHandling(`${API_BASE_URL}/api/scans/${scanId}/progress`);
-  },
-
   // Statistics
   async getStats() {
     return fetchWithErrorHandling(`${API_BASE_URL}/api/stats`);
-  },
-
-  // Vulnerabilities
-  async getVulnerabilities() {
-    return fetchWithErrorHandling(`${API_BASE_URL}/api/vulnerabilities`);
-  },
-
-  // Targets
-  async uploadTargets(file) {
-    const formData = new FormData();
-    formData.append('file', file);
-    return fetchWithErrorHandling(`${API_BASE_URL}/api/upload-targets`, {
-      method: 'POST',
-      body: formData,
-    });
-  },
-
-  // Reports
-  async generateReport(scanId, format = 'html') {
-    const response = await fetch(`${API_BASE_URL}/api/scans/${scanId}/report`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ format }),
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-    
-    if (format === 'html') {
-      return response.text();
-    }
-    return response.blob();
   },
 
   // Delete scan
   async deleteScan(scanId) {
     return fetchWithErrorHandling(`${API_BASE_URL}/api/scans/${scanId}`, {
       method: 'DELETE',
-    });
-  },
-
-  // Notifications
-  async getNotificationSettings() {
-    return fetchWithErrorHandling(`${API_BASE_URL}/api/notifications/settings`);
-  },
-
-  async updateNotificationSettings(settings) {
-    return fetchWithErrorHandling(`${API_BASE_URL}/api/notifications/settings`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(settings),
-    });
-  },
-
-  async testNotification(type) {
-    return fetchWithErrorHandling(`${API_BASE_URL}/api/notifications/test`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ type }),
     });
   }
 };

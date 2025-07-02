@@ -244,7 +244,7 @@ if ! command -v bbot &>/dev/null; then
         fi
         echo "✅ BBOT успешно установлен"
     else
-        echo "❌ Не удалось установить BBOT"
+        echo "⚠ Не удалось установить BBOT, но продолжаем без него"
         return 1
     fi
 else
